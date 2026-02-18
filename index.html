@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Química Master</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0f1a;
+      --surface: #141625;
+      --surface2: #1c1f33;
+      --border: #2a2e4a;
+      --accent: #00e5ff;
+      --accent2: #7c3aed;
+      --green: #00e676;
+      --red: #ff1744;
+      --yellow: #ffea00;
+      --text: #e8eaf6;
+      --muted: #5c6080;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* === BG GRID === */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* === HEADER === */
+    header {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      background: rgba(20,22,37,0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    #close-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      width: 36px; height: 36px;
+      display: grid; place-items: center;
+      border-radius: 8px;
+      transition: color 0.2s, background 0.2s;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    #close-btn:hover { color: var(--text); background: var(--surface2); }
+
+    .progress-wrap {
+      flex: 1;
+      height: 8px;
+      background: var(--surface2);
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      border-radius: 99px;
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: 0 0 8px rgba(0,229,255,0.5);
+    }
+
+    /* === LIVES === */
+    .lives {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .heart {
+      font-size: 20px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+    .heart.lost {
+      opacity: 0.2;
+      transform: scale(0.8);
+      filter: grayscale(1);
+    }
+
+    /* === STREAK === */
+    .streak-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: linear-gradient(135deg, #ff6d00, #ff8f00);
+      border-radius: 99px;
+      padding: 4px 10px 4px 8px;
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(255,109,0,0.4);
+      min-width: 52px;
+      justify-content: center;
+    }
+    .streak-badge.hidden { opacity: 0; pointer-events: none; }
+
+    /* === MAIN SCROLL === */
+    main {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+    main::-webkit-scrollbar { width: 6px; }
+    main::-webkit-scrollbar-track { background: transparent; }
+    main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* === SCREENS === */
+    .screen { display: none; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* === LANDING SCREEN (NEW) === */
+    #landing-screen {
+      padding: 40px 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      min-height: 80vh;
+    }
+    .landing-title {
+      font-size: 32px;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 40px;
+      background: linear-gradient(90deg, #fff, var(--muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .branch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      width: 100%;
+    }
+    .branch-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 30px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .branch-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .branch-icon {
+      font-size: 48px;
+      width: 80px; height: 80px;
+      display: grid; place-items: center;
+      border-radius: 50%;
+      background: var(--surface2);
+      margin-bottom: 8px;
+    }
+    .branch-name { font-size: 20px; font-weight: 700; color: #fff; }
+    .branch-desc { color: var(--muted); font-size: 14px; }
+    
+    .branch-card.inorg:hover .branch-icon { background: rgba(0,229,255,0.2); color: var(--accent); }
+    .branch-card.org:hover .branch-icon { background: rgba(124,58,237,0.2); color: var(--accent2); }
+
+    /* === START SCREEN === */
+    #start-screen {
+      padding: 24px 20px 40px;
+      max-width: 700px;
+      margin: 0 auto;
+      width: 100%;
+      gap: 0;
+    }
+
+    .back-nav-btn {
+      align-self: flex-start;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 8px 0;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .back-nav-btn:hover { color: var(--accent); }
+
+    .hero {
+      text-align: center;
+      padding: 10px 0 28px;
+    }
+
+    .molecule-icon {
+      width: 80px; height: 80px;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      border-radius: 24px;
+      display: grid; place-items: center;
+      font-size: 36px;
+      margin: 0 auto 16px;
+      box-shadow: 0 0 40px rgba(0,229,255,0.25), 0 0 80px rgba(124,58,237,0.15);
+    }
+
+    .hero h1 {
+      font-size: 26px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    .start-full-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 24px rgba(0,229,255,0.25), 0 0 40px rgba(124,58,237,0.2);
+      transition: transform 0.15s, box-shadow 0.15s;
+      margin-bottom: 28px;
+      text-transform: uppercase;
+    }
+    .start-full-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,229,255,0.35), 0 0 60px rgba(124,58,237,0.25);
+    }
+    .start-full-btn:active { transform: translateY(1px); }
+
+    .topics-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    #topics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .topic-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      cursor: pointer;
+      text-align: left;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .topic-card:hover {
+      border-color: var(--accent);
+      background: rgba(0,229,255,0.06);
+      transform: translateY(-2px);
+      box-shadow: 0 0 16px rgba(0,229,255,0.1);
+    }
+    .topic-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      background: var(--surface2);
+      border-radius: 6px;
+      padding: 2px 6px;
+      white-space: nowrap;
+    }
+
+    /* === QUIZ SCREEN === */
+    #quiz-screen {
+      padding: 24px 20px;
+      max-width: 680px;
+      margin: 0 auto;
+      width: 100%;
+      gap: 20px;
+      justify-content: flex-start;
+    }
+
+    /* Timer */
+    .timer-bar-wrap {
+      background: var(--surface2);
+      height: 6px;
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    #timer-bar {
+      height: 100%;
+      width: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width 1s linear, background 1s;
+      box-shadow: 0 0 6px rgba(0,229,255,0.5);
+    }
+    #timer-bar.urgent { background: var(--red); box-shadow: 0 0 6px rgba(255,23,68,0.6); }
+
+    .q-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .q-counter {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .q-category {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(124,58,237,0.15);
+      border: 1px solid rgba(124,58,237,0.4);
+      color: #a78bfa;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    #question-text {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.4;
+      letter-spacing: -0.3px;
+    }
+
+    #options-container {
+      display: grid;
+      gap: 10px;
+    }
+
+    .option-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+      text-align: left;
+    }
+    .option-card:hover { border-color: var(--accent); background: rgba(0,229,255,0.05); }
+    .option-card .opt-letter {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      background: var(--surface2);
+      border-radius: 6px;
+      width: 26px; height: 26px;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+    .option-card.correct {
+      border-color: var(--green) !important;
+      background: rgba(0,230,118,0.1) !important;
+      color: var(--green);
+      box-shadow: 0 0 16px rgba(0,230,118,0.2);
+    }
+    .option-card.correct .opt-letter { background: rgba(0,230,118,0.2); border-color: var(--green); color: var(--green); }
+    .option-card.wrong {
+      border-color: var(--red) !important;
+      background: rgba(255,23,68,0.08) !important;
+      color: var(--red);
+    }
+    .option-card.wrong .opt-letter { background: rgba(255,23,68,0.15); border-color: var(--red); color: var(--red); }
+    .option-card.disabled { pointer-events: none; opacity: 0.4; }
+
+    /* === FEEDBACK BAR === */
+    #feedback-area {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 50;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+    }
+    #feedback-area.show { transform: translateY(0); }
+
+    .feedback-inner {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .feedback-left { display: flex; align-items: flex-start; gap: 12px; }
+
+    .feedback-icon {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    #feedback-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 2px;
+    }
+    #feedback-text {
+      font-size: 13px;
+      opacity: 0.8;
+      line-height: 1.4;
+    }
+
+    .feedback-correct { background: rgba(0,230,118,0.08); }
+    .feedback-wrong { background: rgba(255,23,68,0.08); }
+
+    #next-btn {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+    #next-btn:hover { transform: scale(1.04); }
+    #next-btn:active { transform: scale(0.97); }
+    .next-correct { background: var(--green); color: #0d1a0d; }
+    .next-wrong { background: var(--red); color: #fff; }
+
+    /* === GAME OVER SCREEN === */
+    #gameover-screen {
+      padding: 32px 20px;
+      max-width: 480px;
+      margin: 0 auto;
+      width: 100%;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+    }
+
+    #gameover-screen h2 {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--red);
+    }
+    #gameover-screen p { color: var(--muted); font-size: 15px; }
+
+    /* === RESULT SCREEN === */
+    #result-screen {
+      padding: 32px 20px;
+      max-width: 480px;
+      margin: 0 auto;
+      width: 100%;
+      align-items: center;
+      text-align: center;
+      gap: 0;
+    }
+
+    .result-trophy { font-size: 64px; margin-bottom: 12px; }
+
+    .result-grade {
+      font-family: 'Space Mono', monospace;
+      font-size: 72px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    #result-screen h2 {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .stat-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: 26px;
+      font-weight: 800;
+    }
+
+    #result-message { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
+    .result-btns { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+
+    .btn-retry {
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-retry:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,229,255,0.2); }
+
+    .btn-menu {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.2s;
+    }
+    .btn-menu:hover { background: var(--surface2); }
+
+    /* === ANIMATIONS === */
+    @keyframes popIn {
+      0% { transform: scale(0.85); opacity: 0; }
+      70% { transform: scale(1.03); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes shakeX {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      60% { transform: translateX(6px); }
+    }
+    @keyframes heartBeat {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.4); }
+      60% { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes confettiFall {
+      to {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    .pop-in { animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+    .shake { animation: shakeX 0.4s ease both; }
+    .slide-up { animation: fadeSlideUp 0.3s ease both; }
+
+    /* === CONFETTI === */
+    .confetti-piece {
+      position: fixed;
+      width: 10px; height: 10px;
+      top: -20px;
+      border-radius: 2px;
+      pointer-events: none;
+      animation: confettiFall linear forwards;
+      z-index: 999;
+    }
+
+    /* === GAME OVER HEARTBREAK === */
+    .heartbreak-emoji {
+      font-size: 72px;
+      animation: popIn 0.5s ease both;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <button id="close-btn" title="Cerrar">✕</button>
+    <div class="progress-wrap">
+      <div id="progress-bar"></div>
+    </div>
+    <div class="lives" id="lives-display">
+      <span class="heart">❤️</span>
+      <span class="heart">❤️</span>
+      <span class="heart">❤️</span>
+    </div>
+    <div class="streak-badge hidden" id="streak-badge">🔥 <span id="streak-counter">0</span></div>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- LANDING SCREEN (SELECTOR DE MATERIA) -->
+    <div id="landing-screen" class="screen active">
+      <h1 class="landing-title">Química Master</h1>
+      <div class="branch-grid">
+        <div class="branch-card inorg" onclick="selectBranch('inorganic')">
+          <div class="branch-icon">🧪</div>
+          <div class="branch-name">Química Inorgánica</div>
+          <div class="branch-desc">Estructura atómica, Tabla periódica, Enlaces, Estequiometría...</div>
+        </div>
+        <div class="branch-card org" onclick="selectBranch('organic')">
+          <div class="branch-icon">⚗️</div>
+          <div class="branch-name">Química Orgánica</div>
+          <div class="branch-desc">Hidrocarburos, Grupos funcionales, Isomería, Reacciones...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- START SCREEN -->
+    <div id="start-screen" class="screen">
+      <button class="back-nav-btn" onclick="showScreen('landing')">← Cambiar Materia</button>
+      <div class="hero">
+        <div class="molecule-icon" id="start-icon">🧪</div>
+        <h1 id="start-title">Química General e Inorgánica</h1>
+        <p id="start-desc">90 preguntas · 9 temas · 3 vidas · 30s por pregunta</p>
+      </div>
+      <button class="start-full-btn" onclick="startGame('all')">
+        ▶ Empezar Quiz Completo
+      </button>
+      <div class="topics-label">Temas de estudio</div>
+      <div id="topics-grid"></div>
+    </div>
+
+    <!-- QUIZ SCREEN -->
+    <div id="quiz-screen" class="screen">
+      <div class="timer-bar-wrap">
+        <div id="timer-bar"></div>
+      </div>
+      <div class="q-meta">
+        <span class="q-counter" id="q-counter">1 / 10</span>
+        <span class="q-category" id="question-category">Categoría</span>
+      </div>
+      <h3 id="question-text">¿Pregunta aquí?</h3>
+      <div id="options-container"></div>
+    </div>
+
+    <!-- GAME OVER SCREEN -->
+    <div id="gameover-screen" class="screen">
+      <div class="heartbreak-emoji">💔</div>
+      <h2>Sin Vidas</h2>
+      <p>Se te acabaron las vidas. ¡Sigue practicando!</p>
+      <div class="stats-grid" style="max-width:280px">
+        <div class="stat-card">
+          <div class="stat-label">Aciertos</div>
+          <div class="stat-value" id="go-score" style="color:var(--green)">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Preguntas</div>
+          <div class="stat-value" id="go-total" style="color:var(--accent)">0</div>
+        </div>
+      </div>
+      <div class="result-btns" style="max-width:320px">
+        <button class="btn-retry" id="go-retry-btn">↩ Intentar de nuevo</button>
+        <button class="btn-menu" onclick="returnToMenu()">Volver al menú</button>
+      </div>
+    </div>
+
+    <!-- RESULT SCREEN -->
+    <div id="result-screen" class="screen">
+      <div class="result-trophy" id="result-trophy">🏆</div>
+      <div class="result-grade" id="result-grade">A</div>
+      <h2 id="result-title">¡Completado!</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Aciertos</div>
+          <div class="stat-value" id="final-score" style="color:var(--green)">0/0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Precisión</div>
+          <div class="stat-value" id="final-percentage" style="color:var(--accent)">0%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Mejor Racha</div>
+          <div class="stat-value" id="final-streak" style="color:var(--yellow)">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Vidas restantes</div>
+          <div class="stat-value" id="final-lives" style="color:var(--red)">❤️</div>
+        </div>
+      </div>
+      <p id="result-message" style="margin-bottom:24px; color: var(--muted)"></p>
+      <div class="result-btns">
+        <button class="btn-retry" id="result-retry-btn">↩ Jugar de nuevo</button>
+        <button class="btn-menu" onclick="returnToMenu()">Volver al menú</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FEEDBACK BAR -->
+  <div id="feedback-area">
+    <div class="feedback-inner">
+      <div class="feedback-left">
+        <div class="feedback-icon" id="feedback-icon">✅</div>
+        <div>
+          <div id="feedback-title"></div>
+          <div id="feedback-text"></div>
+        </div>
+      </div>
+      <button id="next-btn" onclick="nextQuestion()">Continuar →</button>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // DATA: INORGÁNICA
+    // ============================================================
+    const inorganicQuestions = [
+      // 1. Estructura Atómica
+      { c:"Estructura Atómica", q:"¿Cuáles son las partículas subatómicas fundamentales que constituyen un átomo?", o:["Protón, neutrón y electrón","Catión, anión y isótopo","Molécula, ion y átomo","Núcleo, corteza y orbital"], a:0, e:"Las partículas fundamentales son protón, neutrón y electrón." },
+      { c:"Estructura Atómica", q:"¿Qué partícula subatómica tiene carga positiva y se encuentra en el núcleo?", o:["Electrón","Neutrón","Protón","Positrón"], a:2, e:"El protón tiene carga positiva y reside en el núcleo." },
+      { c:"Estructura Atómica", q:"¿Qué determina el número atómico (Z) de un elemento?", o:["El número de neutrones","El número de protones","La masa atómica","El número de electrones en la última capa"], a:1, e:"El número atómico (Z) corresponde al número de protones." },
+      { c:"Estructura Atómica", q:"¿Cómo se llaman los átomos de un mismo elemento que tienen diferente número de neutrones?", o:["Isóbaros","Isótonos","Isótopos","Iones"], a:2, e:"Los isótopos son átomos del mismo elemento con distinta cantidad de neutrones." },
+      { c:"Estructura Atómica", q:"En el modelo atómico de Bohr, los electrones:", o:["Se mueven en órbitas circulares con energía cuantizada","Se encuentran en una nube de probabilidad","Están incrustados en una esfera de carga positiva","No tienen una trayectoria definida"], a:0, e:"En el modelo de Bohr, orbitan en niveles de energía cuantizada." },
+      { c:"Estructura Atómica", q:"¿Cuál de los siguientes números cuánticos describe la forma del orbital?", o:["Número cuántico principal (n)","Número cuántico secundario o azimutal (l)","Número cuántico magnético (m)","Número cuántico de spin (s)"], a:1, e:"El número azimutal (l) define la forma del orbital." },
+      { c:"Estructura Atómica", q:"¿Cuántos electrones puede contener como máximo un orbital atómico?", o:["1","2","6","8"], a:1, e:"Por el Principio de exclusión de Pauli, caben máximo 2 electrones." },
+      { c:"Estructura Atómica", q:"¿Qué representa el número másico (A) de un átomo?", o:["La suma de protones y electrones","La suma de protones y neutrones","La suma de neutrones y electrones","El número de protones"], a:1, e:"El número másico (A) es la suma de protones y neutrones." },
+      { c:"Estructura Atómica", q:"Un átomo de oxígeno (Z=8) con 10 neutrones tendrá un número másico de:", o:["8","10","18","16"], a:2, e:"8 protones + 10 neutrones = 18." },
+      { c:"Estructura Atómica", q:"¿Qué principio establece que es imposible conocer simultáneamente la posición y el momento de un electrón con precisión absoluta?", o:["Principio de exclusión de Pauli","Principio de incertidumbre de Heisenberg","Principio de Aufbau","Regla de Hund"], a:1, e:"Es el Principio de incertidumbre de Heisenberg." },
+
+      // 2. Tabla Periódica
+      { c:"Tabla Periódica", q:"¿Cómo se ordenan actualmente los elementos en la tabla periódica?", o:["Por orden de masa atómica creciente","Por orden de número atómico creciente","Por orden de electronegatividad creciente","Por orden de volumen atómico creciente"], a:1, e:"Se ordenan por número atómico (Z) creciente." },
+      { c:"Tabla Periódica", q:"¿Cuántos periodos tiene la tabla periódica?", o:["7","18","9","32"], a:0, e:"La tabla periódica tiene 7 periodos." },
+      { c:"Tabla Periódica", q:"¿Qué son los grupos en la tabla periódica?", o:["Las filas horizontales","Las columnas verticales","Los elementos de la serie de los lantánidos","Los elementos radiactivos"], a:1, e:"Los grupos son las columnas verticales." },
+      { c:"Tabla Periódica", q:"¿Cómo se llama el grupo de los elementos que incluye el oxígeno, azufre y selenio?", o:["Halógenos","Gases nobles","Anfígenos (o calcógenos)","Alcalinotérreos"], a:2, e:"Se denominan Anfígenos o calcógenos." },
+      { c:"Tabla Periódica", q:"¿Cuál es el símbolo del Oro?", o:["Or","O","Au","Ag"], a:2, e:"El símbolo del Oro es Au (del latín Aurum)." },
+      { c:"Tabla Periódica", q:"¿Qué elemento tiene el símbolo 'As'?", o:["Astato","Plata","Arsénico","Aluminio"], a:2, e:"As corresponde al Arsénico." },
+      { c:"Tabla Periódica", q:"¿Cuál de las siguientes propiedades aumenta al desplazarse de izquierda a derecha en un período?", o:["Radio atómico","Carácter metálico","Energía de ionización","Radio iónico"], a:2, e:"La energía de ionización aumenta hacia la derecha en un periodo." },
+      { c:"Tabla Periódica", q:"¿Qué elemento es el más electronegativo según la escala de Pauling?", o:["Cloro","Oxígeno","Nitrógeno","Flúor"], a:3, e:"El Flúor es el elemento más electronegativo." },
+      { c:"Tabla Periódica", q:"¿Dónde se localizan los no metales en la tabla periódica?", o:["En la parte inferior izquierda","En la parte superior derecha","En el centro","En los grupos 1 y 2"], a:1, e:"Los no metales están en la parte superior derecha." },
+      { c:"Tabla Periódica", q:"¿Cuántos gases nobles existen en la tabla periódica?", o:["5","6","7","8"], a:1, e:"Hay 6 gases nobles naturales (He, Ne, Ar, Kr, Xe, Rn)." },
+
+      // 3. Enlace Químico
+      { c:"Enlace Químico", q:"¿Qué tipo de enlace se forma cuando hay una transferencia completa de electrones de un átomo a otro?", o:["Enlace covalente","Enlace metálico","Enlace iónico","Enlace de hidrógeno"], a:2, e:"La transferencia de electrones genera un enlace iónico." },
+      { c:"Enlace Químico", q:"En el enlace covalente, los electrones:", o:["Son transferidos","Son compartidos","Se mueven libremente en una red","No participan"], a:1, e:"En el enlace covalente, los electrones son compartidos." },
+      { c:"Enlace Químico", q:"¿Qué tipo de enlace covalente se da cuando un átomo aporta el par de electrones para compartir?", o:["Covalente puro","Covalente polar","Covalente dativo (o de coordinación)","Enlace iónico"], a:2, e:"Se llama covalente dativo o de coordinación." },
+      { c:"Enlace Químico", q:"¿Cuál de las siguientes es una propiedad típica de los compuestos iónicos?", o:["Bajos puntos de fusión","Son blandos y maleables","Conducen la electricidad en estado fundido o en disolución","Son insolubles en agua"], a:2, e:"Conducen electricidad cuando están fundidos o disueltos." },
+      { c:"Enlace Químico", q:"¿Qué tipo de enlace presentan los metales?", o:["Iónico","Covalente","Metálico","De hidrógeno"], a:2, e:"Los metales presentan enlace metálico." },
+      { c:"Enlace Químico", q:"La teoría del mar de electrones explica propiedades como:", o:["La solubilidad en agua","La conductividad eléctrica y la maleabilidad de los metales","La formación de iones","La baja densidad"], a:1, e:"Explica la conductividad y maleabilidad metálica." },
+      { c:"Enlace Químico", q:"¿Cuál de las siguientes moléculas es un ejemplo de enlace covalente no polar?", o:["HCl","H₂O","Cl₂","NH₃"], a:2, e:"El Cl₂ es no polar porque une átomos idénticos." },
+      { c:"Enlace Químico", q:"¿Qué tipo de fuerza intermolecular explica el punto de ebullición anormalmente alto del agua?", o:["Fuerzas de London","Dipolo-dipolo","Enlace de hidrógeno","Enlace iónico"], a:2, e:"El enlace (puente) de hidrógeno." },
+      { c:"Enlace Químico", q:"Según la regla del octeto, los átomos tienden a:", o:["Perder todos sus electrones","Tener 8 electrones en su última capa","Tener 8 electrones en total","Tener 8 neutrones"], a:1, e:"Tienden a completar 8 electrones en su capa de valencia." },
+      { c:"Enlace Químico", q:"La diferencia de electronegatividad entre dos átomos enlazados es 1.7. ¿Qué tipo de enlace es probablemente?", o:["Covalente puro","Covalente polar","Iónico","Metálico"], a:1, e:"Se considera covalente polar (frontera con iónico)." },
+
+      // 4. Nomenclatura y Formulación
+      { c:"Nomenclatura y Formulación", q:"Según la IUPAC, en un óxido metálico, el metal actúa con:", o:["Número de oxidación negativo","Número de oxidación positivo","Número de oxidación cero","Valencia variable siempre"], a:1, e:"El metal actúa con número de oxidación positivo." },
+      { c:"Nomenclatura y Formulación", q:"¿Cuál es el nombre tradicional del compuesto H₂O?", o:["Óxido de hidrógeno","Agua, óxido de dihidrógeno","Hidruro de oxígeno","Peróxido de hidrógeno"], a:1, e:"Agua (nombre común aceptado) u óxido de dihidrógeno." },
+      { c:"Nomenclatura y Formulación", q:"¿Cuál es la fórmula del anhídrido carbónico?", o:["CO","CO₂","C₂O","CO₃"], a:1, e:"La fórmula es CO₂ (Dióxido de carbono)." },
+      { c:"Nomenclatura y Formulación", q:"El compuesto Fe₂O₃ se llama en nomenclatura sistemática (stock):", o:["Óxido de hierro","Óxido ferroso","Trióxido de dihierro","Óxido de hierro (III)"], a:3, e:"Es Óxido de hierro (III)." },
+      { c:"Nomenclatura y Formulación", q:"¿Cuál es la fórmula del ácido sulfúrico?", o:["H₂S","H₂SO₃","H₂SO₄","HSO₄"], a:2, e:"H₂SO₄ es el ácido sulfúrico." },
+      { c:"Nomenclatura y Formulación", q:"¿Qué tipo de compuesto es el NaCl?", o:["Óxido","Hidrácido","Sal binaria (haluro metálico)","Hidróxido"], a:2, e:"El NaCl es una sal binaria (haluro)." },
+      { c:"Nomenclatura y Formulación", q:"El compuesto Ca(OH)₂ se llama:", o:["Óxido de calcio","Peróxido de calcio","Hidróxido de calcio","Hidruro de calcio"], a:2, e:"Es Hidróxido de calcio." },
+      { c:"Nomenclatura y Formulación", q:"¿Cuál es la fórmula del hidruro de aluminio?", o:["AlH","AlH₃","Al₂H₃","HAl"], a:1, e:"La fórmula correcta es AlH₃." },
+      { c:"Nomenclatura y Formulación", q:"¿Cómo se nombra el compuesto CH₄ en nomenclatura sistemática?", o:["Hidruro de carbono (IV)","Metano","Tetrahidruro de carbono","Carburo de hidrógeno"], a:1, e:"Metano (nombre propio aceptado)." },
+      { c:"Nomenclatura y Formulación", q:"¿Cuál es la fórmula del ácido clorhídrico?", o:["HClO","HClO₂","HCl (acuoso)","ClH"], a:2, e:"HCl en disolución acuosa." },
+
+      // 5. Reacciones Químicas
+      { c:"Reacciones Químicas", q:"En la reacción: A + B → AB, ¿qué tipo de reacción es?", o:["Descomposición","Sustitución simple","Síntesis o combinación","Doble desplazamiento"], a:2, e:"Es una reacción de Síntesis o combinación." },
+      { c:"Reacciones Químicas", q:"¿Qué tipo de reacción es la siguiente? AB → A + B", o:["Síntesis","Análisis o descomposición","Sustitución","Redox"], a:1, e:"Es una reacción de Análisis o descomposición." },
+      { c:"Reacciones Químicas", q:"¿Qué se produce en una reacción de neutralización?", o:["Una sal y agua","Un ácido y una base","Un óxido y oxígeno","Un metal y un no metal"], a:0, e:"Ácido + Base → Sal + Agua." },
+      { c:"Reacciones Químicas", q:"¿Cuál es el número de oxidación del oxígeno en la mayoría de sus compuestos?", o:["+2","-1","-2","0"], a:2, e:"Generalmente actúa con -2." },
+      { c:"Reacciones y Mecanismos", q:"En una reacción redox, la especie que se reduce:", o:["Pierde electrones y aumenta oxidación","Gana electrones y disminuye oxidación","Gana electrones y aumenta oxidación","Pierde electrones y disminuye oxidación"], a:1, e:"Reducción = Ganancia de electrones y disminución del N.O." },
+      { c:"Reacciones Químicas", q:"¿Qué tipo de reacción ocurre cuando un elemento más reactivo desplaza a otro menos reactivo de un compuesto?", o:["Síntesis","Descomposición","Desplazamiento simple (sustitución)","Doble desplazamiento"], a:2, e:"Es desplazamiento simple o sustitución." },
+      { c:"Reacciones Químicas", q:"Al quemar magnesio en aire, se produce una reacción de:", o:["Combustión (oxidación)","Neutralización","Desplazamiento","Descomposición"], a:0, e:"Es una combustión (oxidación rápida)." },
+      { c:"Reacciones Químicas", q:"Para balancear una ecuación química se debe:", o:["Cambiar las fórmulas","Ajustar los coeficientes estequiométricos","Añadir más productos","Modificar los subíndices"], a:1, e:"Se ajustan los coeficientes estequiométricos." },
+      { c:"Reacciones Químicas", q:"¿Cuál de las siguientes es una reacción de doble desplazamiento?", o:["Zn + H₂SO₄ → ZnSO₄ + H₂","2H₂ + O₂ → 2H₂O","AgNO₃ + NaCl → AgCl + NaNO₃","CaCO₃ → CaO + CO₂"], a:2, e:"AgNO₃ + NaCl es doble desplazamiento (precipitación)." },
+      { c:"Reacciones Químicas", q:"En la reacción 2H₂ + O₂ → 2H₂O, el hidrógeno molecular (H₂):", o:["Es el agente oxidante","Se reduce","Se oxida (pasa de 0 a +1)","Es el oxidante"], a:2, e:"El hidrógeno se oxida (pierde electrones)." },
+
+      // 6. Estequiometría
+      { c:"Estequiometría", q:"¿Qué establece la Ley de Conservación de la Masa (Lavoisier)?", o:["Reactivos > Productos","Reactivos < Productos","La masa total se conserva","La masa se transforma en energía"], a:2, e:"La masa no se crea ni se destruye, se conserva." },
+      { c:"Estequiometría", q:"¿Cuántos átomos hay en un mol de cualquier sustancia?", o:["6.022 x 10²³","12 x 10²³","3 x 10⁸","1000"], a:0, e:"Es el Número de Avogadro: 6.022 x 10²³." },
+      { c:"Estequiometría", q:"¿Cuál es la masa molar del agua (H₂O)? (H=1, O=16)", o:["10 g/mol","16 g/mol","17 g/mol","18 g/mol"], a:3, e:"18 g/mol (2*1 + 16)." },
+      { c:"Estequiometría", q:"¿Qué es el reactivo limitante en una reacción química?", o:["El que está en mayor cantidad","El que se consume por completo","El que sobra al final","El más lento"], a:1, e:"El que se consume totalmente y limita la reacción." },
+      { c:"Estequiometría", q:"Si se tienen 2 moles de CO₂, ¿cuántas moléculas de CO₂ se tienen?", o:["12.044 x 10²³","6.022 x 10²³","3.011 x 10²³","1.2044 x 10²⁴"], a:0, e:"2 moles × 6.022×10²³ = 12.044×10²³." },
+      { c:"Estequiometría", q:"La fórmula empírica es CH₂ y su masa molar 56 g/mol. ¿Fórmula molecular?", o:["CH₂","C₂H₄","C₃H₆","C₄H₈"], a:3, e:"Masa CH₂=14. 56/14=4. Fórmula: C₄H₈." },
+      { c:"Estequiometría", q:"En N₂ + 3H₂ → 2NH₃, ¿cuántos moles de NH₃ se producen con 3 moles de N₂?", o:["2 moles","3 moles","6 moles","9 moles"], a:2, e:"1 mol N₂ → 2 mol NH₃. Entonces 3 mol N₂ → 6 mol NH₃." },
+      { c:"Estequiometría", q:"¿Qué unidad expresa moles de soluto por litro de disolución?", o:["Molalidad","Molaridad","Normalidad","Porcentaje en masa"], a:1, e:"Molaridad (M)." },
+      { c:"Estequiometría", q:"Rendimiento 50%, teórico 10g. ¿Cuánto se obtuvo realmente?", o:["10 g","15 g","5 g","20 g"], a:2, e:"50% de 10g es 5g." },
+      { c:"Estequiometría", q:"¿Cuántos moles hay en 100g de CaCO₃? (Masa molar = 100g/mol)", o:["0.5 moles","1 mol","1.5 moles","2 moles"], a:1, e:"100g / 100g/mol = 1 mol." },
+
+      // 7. Disoluciones y Solubilidad
+      { c:"Disoluciones", q:"¿Cómo se llama la mezcla homogénea de dos o más sustancias?", o:["Compuesto","Elemento","Disolución","Suspensión"], a:2, e:"Una disolución es una mezcla homogénea." },
+      { c:"Disoluciones", q:"En una disolución de sal en agua, ¿cuál es el soluto?", o:["El agua","La sal","El disolvente","La mezcla"], a:1, e:"La sal es el soluto (lo que se disuelve)." },
+      { c:"Disoluciones", q:"¿Disolución con la máxima cantidad de soluto posible a una T dada?", o:["Diluida","Concentrada","Saturada","Sobresaturada"], a:2, e:"Se llama disolución saturada." },
+      { c:"Disoluciones", q:"Generalmente, ¿cómo afecta un aumento de temperatura a la solubilidad de un sólido en agua?", o:["Disminuye","Aumenta","No afecta","Primero aumenta luego baja"], a:1, e:"Usualmente aumenta la solubilidad." },
+      { c:"Disoluciones", q:"¿Cómo afecta un aumento de presión a la solubilidad de un gas en un líquido?", o:["Disminuye","Aumenta","No afecta","El gas se evapora"], a:1, e:"Aumenta (Ley de Henry)." },
+      { c:"Disoluciones", q:"Para preparar 250 mL de una disolución 2 M de NaCl, ¿qué se necesita?", o:["29.25 g NaCl + agua hasta 250 mL","117 g NaCl","58.5 g NaCl","29.25 g NaCl en 250 mL agua"], a:0, e:"29.25 g de NaCl disueltos hasta completar 250 mL." },
+      { c:"Disoluciones", q:"¿Cuál de las siguientes unidades de concentración depende de la temperatura?", o:["Molalidad (m)","Fracción molar","Molaridad (M)","Porcentaje en masa"], a:2, e:"Molaridad (por depender del volumen)." },
+      { c:"Disoluciones", q:"La solubilidad del oxígeno en agua es mayor en:", o:["Agua caliente","Agua fría","Agua a presión normal","Agua pura"], a:1, e:"Los gases son más solubles en agua fría." },
+      { c:"Disoluciones", q:"¿Qué indica un alto valor de Kps?", o:["Sólido muy insoluble","Sólido bastante soluble","Sobresaturada","Soluto gas"], a:1, e:"Indica que el sólido es bastante soluble." },
+      { c:"Disoluciones", q:"Mezclar alcohol y agua es un ejemplo de:", o:["Solubilidad limitada","Inmiscibilidad","Miscibilidad total","Precipitación"], a:2, e:"Son totalmente miscibles." },
+
+      // 8. Química Descriptiva
+      { c:"Química Descriptiva", q:"¿Qué color característico tiene la llama al quemar sales de sodio?", o:["Rojo","Verde","Violeta","Amarillo"], a:3, e:"El sodio tiñe la llama de amarillo intenso." },
+      { c:"Química Descriptiva", q:"¿Cuál es el gas más abundante en la atmósfera terrestre?", o:["Oxígeno (O₂)","Nitrógeno (N₂)","Dióxido de carbono (CO₂)","Argón (Ar)"], a:1, e:"El Nitrógeno (N₂) es el más abundante." },
+      { c:"Química Descriptiva", q:"¿Qué metal es líquido a temperatura ambiente?", o:["Hierro","Mercurio","Plomo","Aluminio"], a:1, e:"El Mercurio (Hg) es líquido a T ambiente." },
+      { c:"Química Descriptiva", q:"¿Cómo se conoce comúnmente al carbonato de calcio (CaCO₃)?", o:["Cal viva","Cal apagada","Piedra caliza o mármol","Yeso"], a:2, e:"Piedra caliza o mármol." },
+      { c:"Química Descriptiva", q:"¿Qué elemento semiconductor se usa en chips?", o:["Carbono","Silicio","Aluminio","Cobre"], a:1, e:"El Silicio es clave en electrónica." },
+      { c:"Química Descriptiva", q:"El ozono (O₃) es una forma alotrópica del:", o:["Hidrógeno","Carbono","Oxígeno","Nitrógeno"], a:2, e:"Es un alótropo del Oxígeno." },
+      { c:"Química Descriptiva", q:"¿Qué halógeno es un sólido violeta a temperatura ambiente?", o:["Flúor","Cloro","Bromo","Yodo"], a:3, e:"El Yodo sublima dando vapores violetas." },
+      { c:"Química Descriptiva", q:"El hidrógeno, en condiciones normales, es un gas:", o:["Incoloro, inodoro e insípido","Amarillo verdoso","Olor penetrante","Muy reactivo con todo"], a:0, e:"Es incoloro, inodoro e insípido." },
+      { c:"Química Descriptiva", q:"¿Qué metal alcalino es el más reactivo (teóricamente)?", o:["Litio","Sodio","Potasio","Francio"], a:3, e:"El Francio (por tendencia en el grupo)." },
+      { c:"Química Descriptiva", q:"¿Qué propiedad caracteriza a los gases nobles?", o:["Alta reactividad","Forman muchos compuestos","Son inertes","Son radiactivos"], a:2, e:"Son inertes (muy baja reactividad)." },
+
+      // 9. Química de Coordinación
+      { c:"Química de Coordinación", q:"¿Qué es un compuesto de coordinación o complejo?", o:["Una sal simple","Ion central rodeado de ligandos","Un compuesto orgánico","Un óxido metálico"], a:1, e:"Ion metálico central rodeado de ligandos." },
+      { c:"Química de Coordinación", q:"¿Cómo se llama el ion o molécula que se une al átomo central en un complejo?", o:["Catión","Anión","Ligando","Isótopo"], a:2, e:"Se llama Ligando." },
+      { c:"Química de Coordinación", q:"Si un ligando se une al ion central a través de dos átomos, se denomina:", o:["Monodentado","Bidentado","Tridentado","Hexadentado"], a:1, e:"Es un ligando Bidentado." },
+      { c:"Química de Coordinación", q:"¿Cuál es el número de coordinación más común en los complejos?", o:["2 y 3","4 y 6","5 y 7","8 y 12"], a:1, e:"4 y 6 son los más comunes." },
+      { c:"Química de Coordinación", q:"¿Qué tipo de enlace une al ligando con el ion central?", o:["Enlace iónico","Covalente coordinado (dativo)","Enlace metálico","Enlace de hidrógeno"], a:1, e:"Enlace covalente coordinado (dativo)." },
+      { c:"Química de Coordinación", q:"¿Cuál de los siguientes puede actuar como ligando?", o:["NH₃","Cl⁻","H₂O","Todos los anteriores"], a:3, e:"Todos tienen pares libres para donar." },
+      { c:"Química de Coordinación", q:"En el compuesto [Cu(NH₃)₄]SO₄, ¿cuál es la esfera de coordinación?", o:["SO₄","[Cu(NH₃)₄]²⁺","Cu","NH₃"], a:1, e:"[Cu(NH₃)₄]²⁺ es la esfera de coordinación." },
+      { c:"Química de Coordinación", q:"La teoría del campo cristalino explica, entre otras cosas:", o:["Conductividad metálica","Color y magnetismo de complejos","Enlaces de hidrógeno","Leyes de gases"], a:1, e:"Explica el color y propiedades magnéticas." },
+      { c:"Química de Coordinación", q:"¿Cuál es la fórmula correcta del complejo tetraammincobre(II)?", o:["[Cu(NH₃)₄]²⁺","Cu(NH₃)₄","[Cu(NH₃)₄]⁺","[Cu(NH₃)₄]²⁻"], a:0, e:"[Cu(NH₃)₄]²⁺." },
+      { c:"Química de Coordinación", q:"¿Qué nombre recibe el complejo K₄[Fe(CN)₆]?", o:["Ferricianuro de potasio","Hexacianoferrato(III) de potasio","Hexacianoferrato(II) de potasio","Cianuro de hierro"], a:2, e:"Hexacianoferrato(II) de potasio." }
+    ];
+
+    const inorganicCategories = [
+      "Estructura Atómica", "Tabla Periódica", "Enlace Químico", "Nomenclatura y Formulación",
+      "Reacciones Químicas", "Estequiometría", "Disoluciones", "Química Descriptiva", "Química de Coordinación"
+    ];
+
+    const inorganicEmojis = {
+      "Estructura Atómica": "⚛️", "Tabla Periódica": "🗺️", "Enlace Químico": "🔗",
+      "Nomenclatura y Formulación": "🏷️", "Reacciones Químicas": "💥", "Estequiometría": "⚖️",
+      "Disoluciones": "💧", "Química Descriptiva": "🧪", "Química de Coordinación": "💠"
+    };
+
+    // ============================================================
+    // DATA: ORGÁNICA
+    // ============================================================
+    const organicQuestions = [
+      { c:"El Átomo de Carbono", q:"¿Cuál es la configuración electrónica del carbono en su estado fundamental?", o:["1s² 2s² 2p²","1s² 2s² 2p⁴","1s² 2s¹ 2p³","1s² 2s² 2p⁶"], a:0, e:"En el estado fundamental el C tiene 1s² 2s² 2p²." },
+      { c:"El Átomo de Carbono", q:"¿Qué tipo de hibridación presenta el carbono cuando forma cuatro enlaces simples?", o:["sp","sp²","sp³","sp³d"], a:2, e:"Con cuatro enlaces simples el C usa hibridación sp³." },
+      { c:"El Átomo de Carbono", q:"¿Cuál es el ángulo de enlace aproximado en un carbono sp²?", o:["90°","109.5°","120°","180°"], a:2, e:"El C sp² tiene ángulos de enlace de ~120°, geometría trigonal plana." },
+      { c:"El Átomo de Carbono", q:"¿Qué propiedad le permite al carbono formar cadenas largas y estables?", o:["Electronegatividad","Enlace metálico","Concatenación","Alta densidad"], a:2, e:"La concatenación (capacidad de enlazarse consigo mismo) es clave en orgánica." },
+      { c:"El Átomo de Carbono", q:"¿Cuántos electrones de valencia tiene el carbono?", o:["2","4","6","8"], a:1, e:"El C está en el grupo IV A, por lo que tiene 4 electrones de valencia." },
+      { c:"El Átomo de Carbono", q:"¿Qué forma geométrica adopta un carbono central hibridado sp?", o:["Lineal","Trigonal plana","Tetraédrica","Angular"], a:0, e:"El C sp tiene geometría lineal con ángulo de 180°." },
+      { c:"El Átomo de Carbono", q:"¿Cuál de los orbitales NO participa en la hibridación sp²?", o:["s","p_x","p_y","p_z"], a:3, e:"El orbital p_z queda sin hibridar y forma el enlace π." },
+      { c:"El Átomo de Carbono", q:"¿Qué tipo de enlace se forma por la superposición frontal de orbitales?", o:["Enlace π","Enlace σ","Enlace iónico","Enlace metálico"], a:1, e:"La superposición frontal da lugar al enlace σ (sigma)." },
+      { c:"El Átomo de Carbono", q:"¿Cuál es la electronegatividad del carbono según Pauling?", o:["1.0","2.5","3.0","4.0"], a:1, e:"El C tiene electronegatividad de 2.5 en la escala de Pauling." },
+      { c:"El Átomo de Carbono", q:"¿Qué hibridación tiene un carbono que forma un doble enlace?", o:["sp","sp²","sp³","sp³d"], a:1, e:"El C con doble enlace usa hibridación sp²." },
+      { c:"Hidrocarburos", q:"¿Qué son los hidrocarburos?", o:["Con C, H y O","Exclusivamente C y H","Con C y N","Derivados del petróleo con S"], a:1, e:"Los hidrocarburos contienen exclusivamente C e H." },
+      { c:"Hidrocarburos", q:"¿Cómo se clasifican por tipo de enlace?", o:["Alifáticos/Aromáticos","Saturados/Insaturados","Lineales/Ramificados","Polares/No polares"], a:1, e:"Se clasifican en saturados (solo enlaces simples) e insaturados (con dobles o triples)." },
+      { c:"Hidrocarburos", q:"¿Cuál de los siguientes es un hidrocarburo saturado?", o:["Eteno","Benceno","Propano","Acetileno"], a:2, e:"El propano (C₃H₈) es un alcano, completamente saturado." },
+      { c:"Hidrocarburos", q:"¿Qué tipo de hidrocarburo contiene al menos un enlace doble?", o:["Alcano","Alqueno","Alquino","Aromático"], a:1, e:"Los alquenos tienen al menos un enlace doble C=C." },
+      { c:"Hidrocarburos", q:"¿Cuál es la fórmula general de los alcanos?", o:["CnH2n","CnH2n+2","CnH2n-2","CnHn"], a:1, e:"La fórmula general de los alcanos es CnH2n+2." },
+      { c:"Hidrocarburos", q:"¿Qué hidrocarburo es el más simple de los alquinos?", o:["Metano","Eteno","Etino (acetileno)","Benceno"], a:2, e:"El etino (acetileno, C₂H₂) es el alquino más simple." },
+      { c:"Hidrocarburos", q:"Los hidrocarburos aromáticos se caracterizan por:", o:["Olores fuertes","Anillos con enlaces alternados","Ser siempre líquidos","No reaccionar nunca"], a:1, e:"Los aromáticos poseen anillos con enlaces simples y dobles alternados (deslocalización)." },
+      { c:"Hidrocarburos", q:"¿Cuál de los siguientes es un hidrocarburo insaturado?", o:["Butano","Ciclohexano","Propeno","Decano"], a:2, e:"El propeno (C₃H₆) es un alqueno con un doble enlace." },
+      { c:"Hidrocarburos", q:"¿Cómo se llama la propiedad de ser insoluble en agua?", o:["Polaridad","Hidrofilia","Hidrofobia","Lipofobia"], a:2, e:"Los hidrocarburos son hidrofóbicos (apolares, no se disuelven en agua)." },
+      { c:"Hidrocarburos", q:"¿Qué tipo de hidrocarburo tiene la fórmula CnH2n?", o:["Alcanos","Alquenos no cíclicos","Alquinos","Aromáticos"], a:1, e:"Los alquenos no cíclicos (y cicloalcanos) responden a CnH2n." },
+      { c:"Alcanos", q:"¿Cuál es el alcano más simple?", o:["Etano","Propano","Metano","Butano"], a:2, e:"El metano (CH₄) es el alcano más sencillo." },
+      { c:"Alcanos", q:"¿Qué tipo de reacción caracteriza a los alcanos?", o:["Adición","Sustitución","Eliminación","Condensación"], a:1, e:"Los alcanos reaccionan por sustitución radicalaria (halogenación)." },
+      { c:"Alcanos", q:"¿Cuál es el nombre del alcano de 8 carbonos en cadena lineal?", o:["Octano","Heptano","Nonano","Decano"], a:0, e:"El alcano de 8 C se llama octano." },
+      { c:"Alcanos", q:"¿Qué hibridación tienen los carbonos de los alcanos?", o:["sp","sp²","sp³","sp³d"], a:2, e:"En los alcanos todos los C tienen hibridación sp³." },
+      { c:"Alcanos", q:"¿Cuál es un isómero del butano?", o:["2-metilpropano","Ciclobutano","Buteno","Butino"], a:0, e:"El 2-metilpropano es el isómero de cadena del butano." },
+      { c:"Alcanos", q:"¿En qué reacción los alcanos reaccionan con halógenos bajo luz UV?", o:["Halogenación radicalaria","Adición electrofílica","Eliminación","Oxidación"], a:0, e:"La halogenación de alcanos es una sustitución radicalaria." },
+      { c:"Alcanos", q:"¿Cómo varía el punto de ebullición en alcanos de cadena recta?", o:["Aumenta con la masa","Disminuye con la masa","Es constante","Solo depende de ramificación"], a:0, e:"El p.e. aumenta con la masa molecular (mayor superficie de contacto)." },
+      { c:"Alcanos", q:"¿Qué productos genera la combustión completa de un alcano?", o:["CO y H₂O","CO₂ y H₂O","C y H₂O","CO₂ y H₂"], a:1, e:"Combustión completa: alcano + O₂ → CO₂ + H₂O." },
+      { c:"Alcanos", q:"¿Cómo se llama el grupo alquilo -CH₃?", o:["Metil","Etil","Propil","Butil"], a:0, e:"El grupo -CH₃ se llama metil." },
+      { c:"Alcanos", q:"¿Qué alcano tiene fórmula molecular C₅H₁₂?", o:["Pentano","Hexano","Butano","Propano"], a:0, e:"El pentano tiene 5 C y fórmula C₅H₁₂." },
+      { c:"Alquenos", q:"¿Qué caracteriza a los alquenos?", o:["Enlace triple","Enlace doble","Siempre cíclicos","Solo enlaces simples"], a:1, e:"Los alquenos presentan al menos un enlace doble C=C." },
+      { c:"Alquenos", q:"¿Cuál es la fórmula general de los alquenos no cíclicos?", o:["CnH2n+2","CnH2n","CnH2n-2","CnHn"], a:1, e:"Fórmula general: CnH2n." },
+      { c:"Alquenos", q:"¿Qué tipo de isomería presentan los alquenos por su doble enlace?", o:["Estructural","Geométrica cis-trans","Óptica","De cadena"], a:1, e:"El doble enlace rígido da lugar a isomería geométrica cis-trans." },
+      { c:"Alquenos", q:"¿Cuál es el alqueno más simple?", o:["Eteno (etileno)","Propeno","Buteno","Meteno"], a:0, e:"El eteno (etileno, C₂H₄) es el alqueno más simple." },
+      { c:"Alquenos", q:"¿Qué tipo de reacción es característica de los alquenos?", o:["Sustitución","Adición","Combustión exclusiva","Esterificación"], a:1, e:"Los alquenos reaccionan fundamentalmente por adición al doble enlace." },
+      { c:"Alquenos", q:"¿Qué reactivo distingue un alqueno de un alcano?", o:["Agua de bromo","Ácido clorhídrico","Hidróxido de sodio","Cloruro de sodio"], a:0, e:"El agua de bromo se decolora en presencia de un doble enlace." },
+      { c:"Alquenos", q:"¿Qué regla predice el producto en adición de HBr a un alqueno asimétrico?", o:["Markovnikov","Saytzeff","Hofmann","Hückel"], a:0, e:"La regla de Markovnikov: el H va al C con más H." },
+      { c:"Alquenos", q:"¿Qué producto se obtiene en la hidrogenación de un alqueno?", o:["Alcano","Alcohol","Haluro","Alquino"], a:0, e:"La hidrogenación (H₂ + catalizador) convierte alquenos en alcanos." },
+      { c:"Alquenos", q:"¿Cuál es la hibridación de los carbonos del doble enlace?", o:["sp","sp²","sp³","sp³d"], a:1, e:"Los C del doble enlace tienen hibridación sp²." },
+      { c:"Alquenos", q:"¿Qué es un dieno?", o:["Alqueno con 2 dobles enlaces","Alcano con 2 anillos","Alquino con 2 triples enlaces","Con 2 grupos funcionales"], a:0, e:"Un dieno es un hidrocarburo con dos dobles enlaces C=C." },
+      { c:"Alquinos", q:"¿Qué caracteriza a los alquinos?", o:["Enlace triple","Enlace doble","Siempre aromáticos","Solo enlaces simples"], a:1, e:"Los alquinos tienen al menos un enlace triple C≡C." },
+      { c:"Alquinos", q:"¿Cuál es la fórmula general de los alquinos no cíclicos?", o:["CnH2n+2","CnH2n","CnH2n-2","CnHn"], a:2, e:"Fórmula general: CnH2n-2." },
+      { c:"Alquinos", q:"¿Cuál es el alquino más simple?", o:["Etino (acetileno)","Propino","Butino","Metino"], a:0, e:"El etino (acetileno, C₂H₂) es el alquino más simple." },
+      { c:"Alquinos", q:"¿Qué hibridación tienen los carbonos del triple enlace?", o:["sp","sp²","sp³","sp³d"], a:0, e:"El C del triple enlace usa hibridación sp, con geometría lineal." },
+      { c:"Alquinos", q:"¿Cuál es la geometría alrededor de un carbono sp?", o:["Lineal","Trigonal plana","Tetraédrica","Piramidal"], a:0, e:"La hibridación sp da lugar a una geometría lineal (180°)." },
+      { c:"Alquinos", q:"¿Qué tipo de reacción es más común en alquinos?", o:["Sustitución","Adición","Eliminación","Reducción"], a:1, e:"Los alquinos reaccionan principalmente por adición." },
+      { c:"Alquinos", q:"¿Qué se obtiene en la hidratación de un alquino con HgSO₄?", o:["Alcohol","Aldehído o cetona","Ácido","Alcano"], a:1, e:"La hidratación de alquinos produce aldehídos o cetonas (tautomería ceto-enólica)." },
+      { c:"Alquinos", q:"¿Cómo reacciona el acetileno con solución amoniacal de Cu⁺?", o:["Precipitado rojo","No reacciona","Forma alcohol","Polimeriza"], a:0, e:"Da un precipitado rojo de acetiluro de cobre (I)." },
+      { c:"Alquinos", q:"¿Qué tipo de isomería pueden presentar los alquinos?", o:["Solo de posición","Solo geométrica","Solo óptica","De posición, cadena y funcional"], a:3, e:"Pueden presentar isomería de posición, de cadena y funcional (con alquenos cíclicos)." },
+      { c:"Alquinos", q:"¿Cómo es la longitud del triple enlace comparada con el doble?", o:["Más larga","Más corta","Igual","Variable según compuesto"], a:1, e:"El triple enlace es más corto que el doble (mayor orden de enlace)." },
+      { c:"Aromáticos", q:"¿Cuál es la fórmula molecular del benceno?", o:["C6H12","C6H6","C6H10","C6H8"], a:1, e:"El benceno tiene fórmula C₆H₆." },
+      { c:"Aromáticos", q:"¿Qué estructura propuso Kekulé para el benceno?", o:["Anillo con enlaces simples y dobles alternos","Anillo con todos los enlaces iguales","Cadena abierta","Anillo con enlace triple"], a:0, e:"Kekulé propuso un anillo hexagonal con enlaces simples y dobles alternantes." },
+      { c:"Aromáticos", q:"¿Qué condición impone la regla de Hückel?", o:["4n+2 electrones π","4n electrones π","Ser plano","Ser cíclico"], a:0, e:"La regla de Hückel: 4n+2 electrones π (aromaticidad)." },
+      { c:"Aromáticos", q:"¿Qué reacción es característica del benceno?", o:["Adición electrofílica","Sustitución electrofílica aromática","Sustitución nucleofílica","Eliminación"], a:1, e:"El benceno reacciona por sustitución electrofílica aromática (SEA)." },
+      { c:"Aromáticos", q:"¿Cuál de los siguientes compuestos es aromático?", o:["Ciclohexano","Ciclohexeno","Benceno","Ciclooctatetraeno"], a:2, e:"El benceno cumple los criterios de aromaticidad." },
+      { c:"Aromáticos", q:"¿Qué hacen los grupos activantes en SEA?", o:["Disminuyen velocidad","Aumentan velocidad y dirigen a orto-para","Aumentan velocidad y dirigen a meta","No afectan la reacción"], a:1, e:"Los grupos activantes aumentan la reactividad y orientan a orto y para." },
+      { c:"Aromáticos", q:"¿Qué producto se obtiene al nitrar benceno?", o:["Fenol","Anilina","Nitrobenceno","Clorobenceno"], a:2, e:"La nitración del benceno produce nitrobenceno (C₆H₅NO₂)." },
+      { c:"Aromáticos", q:"El tolueno es:", o:["Metilbenceno","Etilbenceno","Propilbenceno","Dimetilbenceno"], a:0, e:"El tolueno es metilbenceno (C₆H₅-CH₃)." },
+      { c:"Aromáticos", q:"¿Hibridación de los carbonos del anillo bencénico?", o:["sp","sp²","sp³","sp³d"], a:1, e:"Los C del benceno tienen hibridación sp²." },
+      { c:"Aromáticos", q:"¿Producto de oxidación del tolueno con KMnO₄?", o:["Benzaldehído","Ácido benzoico","Fenol","Alcohol bencílico"], a:1, e:"La oxidación vigorosa del tolueno con KMnO₄ da ácido benzoico." },
+      { c:"Grupos Funcionales", q:"¿Qué es un grupo funcional?", o:["Átomo/grupo que determina propiedades químicas","Una cadena de carbonos","Un tipo de enlace","Un isómero"], a:0, e:"El grupo funcional determina las propiedades y reactividad de la molécula." },
+      { c:"Grupos Funcionales", q:"¿Cuál es el grupo funcional de los alcoholes?", o:["-CHO","-OH","-COOH","-NH2"], a:1, e:"Los alcoholes tienen el grupo -OH (hidroxilo)." },
+      { c:"Grupos Funcionales", q:"¿Qué grupo funcional caracteriza a los aldehídos?", o:["-CO-","-CHO","-COOH","-OH"], a:1, e:"Los aldehídos tienen el grupo -CHO (aldehído)." },
+      { c:"Grupos Funcionales", q:"¿Cuál es el grupo funcional de los ácidos carboxílicos?", o:["-OH","-COOR","-COOH","-CONH2"], a:2, e:"Los ácidos carboxílicos tienen el grupo -COOH." },
+      { c:"Grupos Funcionales", q:"¿Qué grupo funcional tienen las aminas?", o:["-NO2","-NH2","-CN","-SH"], a:1, e:"Las aminas tienen el grupo -NH₂ (amino)." },
+      { c:"Grupos Funcionales", q:"Los éteres se caracterizan por el grupo:", o:["-O-","-OH","-CO-","-COO-"], a:0, e:"El grupo éter es -O- (oxígeno entre dos carbonos)." },
+      { c:"Grupos Funcionales", q:"¿Qué grupo funcional tienen las cetonas?", o:["-CHO","-CO-","-COOH","-OH"], a:1, e:"Las cetonas tienen el grupo carbonilo -CO- interno." },
+      { c:"Grupos Funcionales", q:"Los haluros de alquilo contienen:", o:["Halógeno en carbono sp³","Halógeno en aromático","Halógeno en alqueno","Todos los anteriores"], a:0, e:"En haluros de alquilo el halógeno está en un carbono saturado (sp³)." },
+      { c:"Grupos Funcionales", q:"¿Qué grupo funcional tienen los ésteres?", o:["-COO-","-COOH","-CO-","-O-"], a:0, e:"Los ésteres tienen el grupo -COO-." },
+      { c:"Grupos Funcionales", q:"¿Cuál es el grupo funcional de los nitrilos?", o:["-CN","-NO2","-NC","-CONH2"], a:0, e:"Los nitrilos tienen el grupo -C≡N (ciano)." },
+      { c:"Haluros de Alquilo", q:"¿Qué son los haluros de alquilo?", o:["Halógeno en aromático","Halógeno en C saturado","Halógeno en doble enlace","Halógeno en oxígeno"], a:1, e:"Son compuestos con un halógeno unido a un carbono saturado." },
+      { c:"Haluros de Alquilo", q:"¿Cuál es la fórmula general de un haluro de alquilo?", o:["R-X","Ar-X","R-OH","R-CO-X"], a:0, e:"La fórmula general es R-X, donde X es un halógeno." },
+      { c:"Haluros de Alquilo", q:"¿Qué reacción es típica de haluros de alquilo?", o:["Adición","Sustitución nucleofílica","Sustitución electrofílica","Eliminación"], a:1, e:"Los haluros de alquilo reaccionan por sustitución nucleofílica (SN1 y SN2)." },
+      { c:"Haluros de Alquilo", q:"¿Qué haluro es más reactivo en SN2?", o:["Metil","Primario","Secundario","Terciario"], a:0, e:"El haluro de metilo es el más reactivo en SN2 (menor impedimento estérico)." },
+      { c:"Haluros de Alquilo", q:"En SN1, ¿qué tipo de sustrato favorece la reacción?", o:["Metílico","Primario","Terciario","El disolvente polar"], a:2, e:"El sustrato terciario estabiliza mejor el carbocatión intermedio en SN1." },
+      { c:"Haluros de Alquilo", q:"¿Producto de reacción de un haluro con NaOH acuoso?", o:["Éter","Alcohol","Alqueno","Alcano"], a:1, e:"NaOH acuoso sustituye el halógeno por -OH dando un alcohol." },
+      { c:"Haluros de Alquilo", q:"¿Qué reacción compite con la sustitución nucleofílica?", o:["Adición","Eliminación","Reducción","Oxidación"], a:1, e:"La eliminación (E1 o E2) compite con la sustitución nucleofílica." },
+      { c:"Haluros de Alquilo", q:"¿Qué base favorece E2 sobre sustitución?", o:["Base débil","Base fuerte y voluminosa","Nucleófilo fuerte sin carga","Ácido"], a:1, e:"Una base fuerte y voluminosa favorece la eliminación E2 sobre SN2." },
+      { c:"Haluros de Alquilo", q:"¿Orden de reactividad de halógenos para SN2?", o:["F>Cl>Br>I","I>Br>Cl>F","Cl>Br>I>F","Todos iguales"], a:1, e:"I > Br > Cl > F (mejor grupo saliente, enlace más débil con C)." },
+      { c:"Haluros de Alquilo", q:"¿Nombre del compuesto CH3-CH2-Br?", o:["Bromuro de etilo","Bromuro de metilo","Bromuro de propilo","Bromoetano"], a:0, e:"CH₃CH₂Br es el bromuro de etilo (bromoetano según IUPAC)." },
+      { c:"Alcoholes", q:"¿Grupo funcional de los alcoholes?", o:["-OH","-O-","-COOH","-CHO"], a:0, e:"Los alcoholes tienen el grupo -OH (hidroxilo)." },
+      { c:"Alcoholes", q:"¿Cómo se clasifican los alcoholes por número de grupos -OH?", o:["Primarios, secundarios, terciarios","Monoles, dioles, trioles…","Alifáticos/Aromáticos","Simples/Complejos"], a:1, e:"Por número de -OH: monoles (1), dioles (2), trioles (3), etc." },
+      { c:"Alcoholes", q:"¿Cuál es el alcohol más simple?", o:["Etanol","Metanol","Propanol","Butanol"], a:1, e:"El metanol (CH₃OH) es el alcohol más sencillo." },
+      { c:"Alcoholes", q:"¿Qué reacción ocurre entre alcoholes y ácidos carboxílicos?", o:["Oxidación","Esterificación","Deshidratación","Reducción"], a:1, e:"La esterificación de Fisher produce ésteres y agua." },
+      { c:"Alcoholes", q:"¿Producto de oxidación de un alcohol primario?", o:["Cetona","Aldehído o ácido carboxílico","Éter","Alqueno"], a:1, e:"Oxidación suave → aldehído; oxidación fuerte → ácido carboxílico." },
+      { c:"Alcoholes", q:"¿Producto de deshidratación de un alcohol con H₂SO₄ concentrado?", o:["Éter","Alqueno","Aldehído","Cetona"], a:1, e:"A alta temperatura la deshidratación produce alquenos." },
+      { c:"Alcoholes", q:"¿Facilidad de deshidratación de alcoholes?", o:["1º > 2º > 3º","3º > 2º > 1º","Todos iguales","Depende del ácido"], a:1, e:"Terciario > secundario > primario (estabilidad del carbocatión)." },
+      { c:"Alcoholes", q:"¿Qué reactivo oxida alcohol a aldehído sin sobreoxidar?", o:["KMnO₄","K₂Cr₂O₇","PCC","HNO₃"], a:2, e:"El PCC (clorocromato de piridinio) oxida alcohol 1° a aldehído sin llegar a ácido." },
+      { c:"Alcoholes", q:"¿Los alcoholes son?", o:["Ácidos fuertes","Bases fuertes","Ácidos débiles","Completamente neutros"], a:2, e:"Los alcoholes son ácidos débiles (pKa ~16)." },
+      { c:"Alcoholes", q:"¿Nombre de CH₃-CHOH-CH₃?", o:["Propanol","Isopropanol","Etanol","Butanol"], a:1, e:"CH₃-CHOH-CH₃ es propan-2-ol, comúnmente llamado isopropanol." },
+      { c:"Éteres", q:"¿Grupo funcional de los éteres?", o:["-OH","-O-","-CO-","-COOH"], a:1, e:"El grupo funcional del éter es -O- (puente de oxígeno)." },
+      { c:"Éteres", q:"¿Fórmula general de un éter?", o:["R-OH","R-O-R'","R-CO-R'","R-COOH"], a:1, e:"Los éteres tienen la forma R-O-R'." },
+      { c:"Éteres", q:"¿Qué tipo de éter es el THF (tetrahidrofurano)?", o:["Acíclico","Cíclico","Aromático","Vinílico"], a:1, e:"El THF es un éter cíclico de cinco miembros." },
+      { c:"Éteres", q:"¿Preparación común de éteres?", o:["Oxidación","Síntesis de Williamson","Reducción","Hidratación de alquenos"], a:1, e:"La síntesis de Williamson usa un alcóxido + haluro de alquilo." },
+      { c:"Éteres", q:"¿Qué reactivos se usan en la síntesis de Williamson?", o:["Alcohol y ácido","Alcóxido y haluro de alquilo","Alqueno y agua","Aldehído y alcohol"], a:1, e:"Alcóxido (R-O⁻) + haluro de alquilo (R'-X) → R-O-R'." },
+      { c:"Éteres", q:"¿Tienen momento dipolar los éteres?", o:["No, son completamente apolares","Sí, tienen momento dipolar","Solo los cíclicos","Depende del disolvente"], a:1, e:"Sí, el ángulo C-O-C no es lineal, lo que genera un momento dipolar." },
+      { c:"Éteres", q:"¿Qué riesgo presentan los éteres almacenados con aire?", o:["Polimerización","Formación de peróxidos explosivos","Oxidación a aldehído","Hidrólisis"], a:1, e:"Los éteres pueden formar peróxidos explosivos por autooxidación." },
+      { c:"Éteres", q:"¿Nombre de CH₃-O-CH₂CH₃?", o:["Etil metil éter","Dietil éter","Dimetil éter","Etil propil éter"], a:0, e:"CH₃-O-CH₂CH₃ es metoxietano o etil metil éter." },
+      { c:"Éteres", q:"¿Cuál es la solubilidad en agua de los éteres de bajo peso molecular?", o:["Total","Parcial","Completamente insolubles","Solo los más largos son solubles"], a:1, e:"Los éteres pequeños son parcialmente solubles (aceptan puentes de H)." },
+      { c:"Éteres", q:"¿Producto de la reacción de un éter con HI?", o:["Alcohol y haluro de alquilo","Alqueno","Yoduro y alcohol","Dos haluros"], a:0, e:"El HI (o HBr) rompe el éter dando alcohol y haluro de alquilo." },
+      { c:"Aldehídos y Cetonas", q:"¿Qué grupo tienen en común aldehídos y cetonas?", o:["Hidroxilo","Carbonilo","Carboxilo","Amino"], a:1, e:"Ambos poseen el grupo carbonilo C=O." },
+      { c:"Aldehídos y Cetonas", q:"¿Diferencia estructural entre aldehído y cetona?", o:["El aldehído tiene H en el carbonilo","La cetona tiene H en el carbonilo","El aldehído tiene dos carbonos","No hay diferencia"], a:0, e:"En el aldehído el C=O está en un extremo de la cadena (unido a H)." },
+      { c:"Aldehídos y Cetonas", q:"¿Cuál es el aldehído más simple?", o:["Formaldehído","Acetaldehído","Propionaldehído","Benzaldehído"], a:0, e:"El formaldehído (metanal, HCHO) es el aldehído más sencillo." },
+      { c:"Aldehídos y Cetonas", q:"¿Qué reactivo distingue aldehídos de cetonas?", o:["Reactivo de Tollens","Agua de bromo","NaOH","HCl"], a:0, e:"El reactivo de Tollens oxida aldehídos (espejo de plata); no reacciona con cetonas." },
+      { c:"Aldehídos y Cetonas", q:"¿Qué produce la oxidación de un aldehído?", o:["Alcohol","Cetona","Ácido carboxílico","Éster"], a:2, e:"Los aldehídos se oxidan fácilmente a ácidos carboxílicos." },
+      { c:"Aldehídos y Cetonas", q:"¿Se oxidan fácilmente las cetonas?", o:["Sí, a ácidos","No, son resistentes","Sí, a alcoholes","Sí, a ésteres"], a:1, e:"Las cetonas resisten la oxidación suave (sin H en el C=O)." },
+      { c:"Aldehídos y Cetonas", q:"¿Qué reacción es característica del grupo carbonilo?", o:["Adición nucleofílica","Sustitución electrofílica","Eliminación","Adición electrofílica"], a:0, e:"El grupo carbonilo sufre adición nucleofílica." },
+      { c:"Aldehídos y Cetonas", q:"¿Aldehído + alcohol en medio ácido produce?", o:["Éter","Hemiacetal y luego acetal","Éster","Cetona"], a:1, e:"La reacción da hemiacetal (1 alcohol) y luego acetal (2 alcoholes)." },
+      { c:"Aldehídos y Cetonas", q:"¿Aldehído + amina primaria produce?", o:["Condensación aldólica","Base de Schiff (imina)","Esterificación","Reducción"], a:1, e:"Aldehído + amina primaria → imina (base de Schiff) + H₂O." },
+      { c:"Aldehídos y Cetonas", q:"¿Cuál de los siguientes es una cetona?", o:["CH₃CHO","CH₃COCH₃","CH₃COOH","CH₃OH"], a:1, e:"CH₃-CO-CH₃ es acetona (propanona), una cetona." },
+      { c:"Ácidos Carboxílicos", q:"¿Cuál es el grupo funcional de los ácidos carboxílicos?", o:["-OH","-CHO","-COOH","-COOR"], a:2, e:"Los ácidos carboxílicos tienen el grupo -COOH (carboxilo)." },
+      { c:"Ácidos Carboxílicos", q:"¿Cuál es el ácido carboxílico más simple?", o:["Acético","Fórmico","Propiónico","Benzoico"], a:1, e:"El ácido fórmico (HCOOH) es el más sencillo." },
+      { c:"Ácidos Carboxílicos", q:"¿Qué tipo de ácidos son los ácidos carboxílicos?", o:["Fuertes","Débiles","Neutros","Básicos"], a:1, e:"Son ácidos débiles con pKa típico de 4-5." },
+      { c:"Ácidos Carboxílicos", q:"¿Qué se forma al reaccionar un ácido con un alcohol?", o:["Éter","Éster","Aldehído","Cetona"], a:1, e:"La esterificación da un éster y agua." },
+      { c:"Ácidos Carboxílicos", q:"¿Cómo se prepara un cloruro de ácido?", o:["Con SOCl₂","Con NaOH","Con H₂SO₄","Con alcohol"], a:0, e:"El cloruro de tionilo (SOCl₂) convierte el -COOH en -COCl." },
+      { c:"Ácidos Carboxílicos", q:"¿Qué produce la reducción de un ácido carboxílico con LiAlH₄?", o:["Aldehído","Cetona","Alcohol primario","Alcano"], a:2, e:"LiAlH₄ reduce ácidos carboxílicos a alcoholes primarios." },
+      { c:"Ácidos Carboxílicos", q:"¿En qué condición forman dímeros los ácidos carboxílicos?", o:["En fase vapor o disolvente apolar","En agua","En fase gaseosa siempre","En agua acidificada"], a:0, e:"Los ácidos forman dímeros por puentes de hidrógeno en fase vapor o disolventes apolares." },
+      { c:"Ácidos Carboxílicos", q:"¿Nombre de CH₃-COOH?", o:["Fórmico","Acético","Propiónico","Butírico"], a:1, e:"CH₃COOH es el ácido acético (etanoico)." },
+      { c:"Ácidos Carboxílicos", q:"¿Qué se forma al reaccionar ácidos carboxílicos con bases?", o:["Carboxilatos (sales)","Ésteres","Amidas","Se oxidan"], a:0, e:"Ácido + base → carboxilato (sal) + agua." },
+      { c:"Ácidos Carboxílicos", q:"¿Orden de acidez?", o:["Alcohol>Ácido>Fenol","Ácido>Fenol>Alcohol","Fenol>Ácido>Alcohol","Alcohol>Fenol>Ácido"], a:1, e:"Ácido carboxílico > fenol > alcohol (por estabilidad del anión conjugado)." },
+      { c:"Derivados de Ácidos", q:"¿Cuáles son los principales derivados de ácidos carboxílicos?", o:["Ésteres, amidas, cloruros de ácido, anhídridos","Alcoholes, éteres, cetonas","Aminas, nitrilos, alcanos","Alquenos, alquinos, aromáticos"], a:0, e:"Ésteres, amidas, cloruros de ácido y anhídridos son los principales derivados." },
+      { c:"Derivados de Ácidos", q:"¿Cuál es el derivado más reactivo de los ácidos?", o:["Éster","Amida","Cloruro de ácido","Anhídrido"], a:2, e:"El cloruro de ácido es el más reactivo (Cl es excelente grupo saliente)." },
+      { c:"Derivados de Ácidos", q:"¿Qué produce la hidrólisis de un éster?", o:["Alcohol y ácido carboxílico","Alcohol y aldehído","Ácido y amina","Cetona y alcohol"], a:0, e:"La hidrólisis de éster da alcohol y ácido carboxílico." },
+      { c:"Derivados de Ácidos", q:"¿Cómo se puede formar una amida?", o:["Ácido + amina","Cloruro de ácido + amina","Éster + amoníaco","Todas las anteriores"], a:3, e:"Todas son rutas válidas para obtener amidas." },
+      { c:"Derivados de Ácidos", q:"¿Qué es la saponificación?", o:["Hidrólisis básica de un éster","Formación de éster","Reducción de éster","Oxidación de éster"], a:0, e:"La saponificación es la hidrólisis básica de un éster para dar jabón (carboxilato)." },
+      { c:"Derivados de Ácidos", q:"¿Cómo se obtienen los anhídridos de ácido?", o:["Deshidratación de dos ácidos","Oxidación de aldehídos","Reducción de ésteres","Ácido + alcohol"], a:0, e:"La deshidratación de dos ácidos carboxílicos da un anhídrido." },
+      { c:"Derivados de Ácidos", q:"¿Qué produce la reacción de cloruro de ácido con amoníaco?", o:["Éster","Amida","Anhídrido","Ácido"], a:1, e:"Cloruro de ácido + NH₃ → amida." },
+      { c:"Derivados de Ácidos", q:"¿Nombre de CH₃-COO-CH₂CH₃?", o:["Ácido acético","Acetato de etilo","Propionato de metilo","Butirato de etilo"], a:1, e:"CH₃-COO-CH₂CH₃ es acetato de etilo (etanoato de etilo)." },
+      { c:"Derivados de Ácidos", q:"¿Las amidas son?", o:["Básicos","Ácidos","Esencialmente neutras","Anfóteros"], a:2, e:"Las amidas son esencialmente neutras (el nitrógeno no es muy básico)." },
+      { c:"Derivados de Ácidos", q:"¿Qué produce la reacción de un éster con reactivo de Grignard (exceso)?", o:["Alcohol terciario","Cetona","Ácido carboxílico","No reacciona"], a:0, e:"Dos equivalentes de RMgX con un éster dan un alcohol terciario." },
+      { c:"Aminas", q:"¿Cuál es el grupo funcional de las aminas?", o:["-OH","-NH₂","-NO₂","-CN"], a:1, e:"Las aminas tienen el grupo -NH₂ (o -NHR, -NR₂)." },
+      { c:"Aminas", q:"¿Cómo se clasifican las aminas?", o:["Solo primarias, secundarias y terciarias","Solo alifáticas y aromáticas","Ambas clasificaciones","Ninguna es correcta"], a:2, e:"Se clasifican como primarias/secundarias/terciarias Y como alifáticas/aromáticas." },
+      { c:"Aminas", q:"¿Cuál es la amina más simple?", o:["Metilamina","Etilamina","Anilina","Amoníaco"], a:0, e:"La metilamina (CH₃NH₂) es la amina más simple." },
+      { c:"Aminas", q:"¿Qué tipo de bases son las aminas?", o:["Fuertes","Débiles","Ácidos débiles","Neutras"], a:1, e:"Las aminas son bases débiles (el par solitario del N acepta protones)." },
+      { c:"Aminas", q:"¿Qué produce la alquilación de aminas con haluros?", o:["Aminas más sustituidas y sales de amonio cuaternario","Solo sales de amonio","Solo amidas","Solo nitrilos"], a:0, e:"Se produce una mezcla de aminas más sustituidas y sales cuaternarias." },
+      { c:"Aminas", q:"¿Qué agente reduce nitrilos a aminas?", o:["LiAlH₄","KMnO₄","Agua","Ácidos"], a:0, e:"El LiAlH₄ reduce los nitrilos (R-CN) a aminas (R-CH₂NH₂)." },
+      { c:"Aminas", q:"¿Qué produce la reacción de amina + ácido?", o:["Sales de amonio","Amidas directas","Se oxidan","Se reducen"], a:0, e:"Las aminas reaccionan con ácidos para dar sales de amonio." },
+      { c:"Aminas", q:"¿Por qué la anilina es menos básica que las alquilaminas?", o:["Efecto inductivo","Resonancia del par libre con el anillo","Efecto estérico","Por ser aromática siempre"], a:1, e:"El par libre del N de anilina está deslocalizado en el anillo, reduciendo su basicidad." },
+      { c:"Aminas", q:"¿Qué produce la reacción de amina primaria + aldehído?", o:["Imina (base de Schiff)","Amida","Enamina","Sal de amonio"], a:0, e:"Amina 1° + aldehído → imina (base de Schiff) + H₂O." },
+      { c:"Aminas", q:"¿Nombre de (CH₃)₃N?", o:["Trimetilamina","Dimetilamina","Metilamina","Anilina"], a:0, e:"(CH₃)₃N es la trimetilamina, una amina terciaria." },
+      { c:"Isomería", q:"¿Qué es la isomería?", o:["Misma fórmula molecular, diferente estructura","Fórmula diferente","Igual estructura y fórmula","Misma masa, diferente estado"], a:0, e:"Los isómeros tienen la misma fórmula molecular pero distinta estructura." },
+      { c:"Isomería", q:"¿Cuáles son los dos grandes tipos de isomería?", o:["Estructural y estereoisomería","Solo cadena y posición","Solo geométrica y óptica","Funcional y tautomería"], a:0, e:"Isomería estructural (diferente conectividad) y estereoisomería (misma conectividad)." },
+      { c:"Isomería", q:"¿Qué tipo de isomería presentan butano y 2-metilpropano?", o:["De cadena","De posición","Funcional","Tautomería"], a:0, e:"Butano y 2-metilpropano son isómeros de cadena." },
+      { c:"Isomería", q:"¿Qué tipo de isomería presentan 1-butanol y 2-butanol?", o:["De cadena","De posición","Funcional","Geométrica"], a:1, e:"El -OH en diferente carbono: isomería de posición." },
+      { c:"Isomería", q:"¿Qué tipo de isomería presentan propanal y acetona?", o:["De cadena","De posición","Funcional","Geométrica"], a:2, e:"Propanal (aldehído) y acetona (cetona) son isómeros funcionales." },
+      { c:"Isomería", q:"¿Qué condición requiere la isomería geométrica (cis-trans)?", o:["Dos sustituyentes distintos en cada C del doble enlace","Un carbono quiral","Que sea cíclica","Presencia de triple enlace"], a:0, e:"Cada C del doble enlace debe tener dos sustituyentes diferentes." },
+      { c:"Isomería", q:"¿Qué es un carbono quiral (asimétrico)?", o:["Con 4 sustituyentes diferentes","Con hibridación sp²","Unido a un halógeno","Que esté en un anillo"], a:0, e:"Un C quiral tiene cuatro sustituyentes todos diferentes." },
+      { c:"Isomería", q:"¿Qué son los enantiómeros?", o:["Imágenes especulares no superponibles","Isómeros no especulares","Isómeros estructurales","Isómeros geométricos"], a:0, e:"Los enantiómeros son imágenes especulares no superponibles entre sí." },
+      { c:"Isomería", q:"¿Qué propiedad óptica tienen los enantiómeros?", o:["Desvían la luz polarizada en sentidos opuestos","Mismo punto de ebullición siempre","Son sólidos por definición","Sin actividad óptica"], a:0, e:"Cada enantiómero desvía el plano de la luz polarizada en sentido contrario." },
+      { c:"Isomería", q:"¿Qué es una mezcla racémica?", o:["Mezcla equimolar de enantiómeros, ópticamente inactiva","Solo diastereómeros","Isómero geométrico especial","Dos carbonos quirales"], a:0, e:"La mezcla racémica 50:50 de enantiómeros es ópticamente inactiva." },
+      { c:"Reacciones y Mecanismos", q:"¿La adición electrofílica es típica de?", o:["Alquenos","Alcanos","Aromáticos","Alcoholes"], a:0, e:"Los alquenos reaccionan por adición electrofílica al doble enlace." },
+      { c:"Reacciones y Mecanismos", q:"¿Cuál es la cinética de SN2?", o:["Primer orden","Segundo orden","Orden cero","Depende solo del disolvente"], a:1, e:"SN2 es de segundo orden: velocidad = k[sustrato][nucleófilo]." },
+      { c:"Reacciones y Mecanismos", q:"¿Cómo es la eliminación E1?", o:["Unimolecular, con carbocatión","Bimolecular","De adición","De sustitución"], a:0, e:"E1 es unimolecular: primero se forma el carbocatión, luego pérdida de H⁺." },
+      { c:"Reacciones y Mecanismos", q:"¿Qué es un carbocatión?", o:["Ion con carga positiva en carbono","Ion con carga negativa","Radical libre","Carbanión"], a:0, e:"Un carbocatión (carbenio) es un carbono con carga positiva y solo 3 sustituyentes." },
+      { c:"Reacciones y Mecanismos", q:"¿Orden de estabilidad de carbocationes?", o:["Metil>1>2>3","3>2>1>Metil","1>2>3>Metil","Todos iguales"], a:1, e:"Terciario > secundario > primario > metilo (hiperconjugación e inducción)." },
+      { c:"Reacciones y Mecanismos", q:"¿Por qué mecanismo se hala genan los alcanos?", o:["Sustitución radicalaria","Adición electrofílica","Sustitución nucleofílica","Eliminación"], a:0, e:"La halogenación de alcanos es una sustitución radicalaria (radicales libres)." },
+      { c:"Reacciones y Mecanismos", q:"¿HBr + peróxidos en alqueno asimétrico da?", o:["Producto de Markovnikov","Producto anti-Markovnikov","Saytzeff","Hofmann"], a:1, e:"En presencia de peróxidos el mecanismo es radicalario: anti-Markovnikov." },
+      { c:"Reacciones y Mecanismos", q:"¿Qué es el reactivo de Grignard?", o:["RMgX","RLi","RCuLi","RZn"], a:0, e:"El reactivo de Grignard es un organomagnesiano: R-MgX." },
+      { c:"Reacciones y Mecanismos", q:"¿Qué es la condensación aldólica?", o:["Formación de enlace C-C entre carbonílicos","Adición de alcohol a aldehído","Oxidación de aldehído","Reducción de aldehído"], a:0, e:"La condensación aldólica forma un nuevo enlace C-C entre carbonílicos en medio básico." },
+      { c:"Reacciones y Mecanismos", q:"¿Qué catalizadores se usan en la hidrogenación?", o:["H₂SO₄","Pd, Pt o Ni","KMnO₄","AlCl₃"], a:1, e:"Paladio, platino o níquel son los catalizadores típicos de hidrogenación." }
+    ];
+
+    const organicCategories = [
+      "El Átomo de Carbono","Hidrocarburos","Alcanos","Alquenos",
+      "Alquinos","Aromáticos","Grupos Funcionales","Haluros de Alquilo",
+      "Alcoholes","Éteres","Aldehídos y Cetonas","Ácidos Carboxílicos",
+      "Derivados de Ácidos","Aminas","Isomería","Reacciones y Mecanismos"
+    ];
+
+    const organicEmojis = {
+      "El Átomo de Carbono":"⚛️","Hidrocarburos":"🛢️","Alcanos":"🔗",
+      "Alquenos":"🔄","Alquinos":"⚡","Aromáticos":"💎",
+      "Grupos Funcionales":"🏷️","Haluros de Alquilo":"🧪",
+      "Alcoholes":"🍶","Éteres":"🌀","Aldehídos y Cetonas":"⚗️",
+      "Ácidos Carboxílicos":"🔬","Derivados de Ácidos":"🧬",
+      "Aminas":"🔵","Isomería":"🔀","Reacciones y Mecanismos":"⚙️"
+    };
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let activeData = {
+      questions: [],
+      categories: [],
+      emojis: {}
+    };
+
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let lives = 3;
+    let streak = 0;
+    let maxStreak = 0;
+    let isAnswered = false;
+    let timerInterval = null;
+    let timeLeft = 30;
+    let currentMode = 'all';
+
+    const TIMER_DURATION = 30;
+
+    // ============================================================
+    // DOM UTILS
+    // ============================================================
+    const $ = id => document.getElementById(id);
+    const screens = { 
+      landing: 'landing-screen',
+      start: 'start-screen', 
+      quiz: 'quiz-screen', 
+      gameover: 'gameover-screen', 
+      result: 'result-screen' 
+    };
+
+    function showScreen(name) {
+      Object.values(screens).forEach(id => {
+        $( id ).classList.remove('active');
+      });
+      $( screens[name] ).classList.add('active');
+    }
+
+    // ============================================================
+    // BRANCH SELECTION
+    // ============================================================
+    function selectBranch(type) {
+      if (type === 'inorganic') {
+        activeData.questions = [...inorganicQuestions];
+        activeData.categories = [...inorganicCategories];
+        activeData.emojis = {...inorganicEmojis};
+        updateStartScreen(
+          "Química General e Inorgánica", 
+          "🧪", 
+          `90 preguntas · 9 temas · 3 vidas · 30s por pregunta`
+        );
+      } else {
+        activeData.questions = [...organicQuestions];
+        activeData.categories = [...organicCategories];
+        activeData.emojis = {...organicEmojis};
+        updateStartScreen(
+          "Química Orgánica", 
+          "⚗️", 
+          `160 preguntas · 16 temas · 3 vidas · 30s por pregunta`
+        );
+      }
+      renderTopics();
+      showScreen('start');
+    }
+
+    function updateStartScreen(title, icon, desc) {
+      $('start-title').textContent = title;
+      $('start-icon').textContent = icon;
+      $('start-desc').textContent = desc;
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    updateLivesDisplay();
+
+    function renderTopics() {
+      const grid = $('topics-grid');
+      grid.innerHTML = '';
+      activeData.categories.forEach(topic => {
+        const count = activeData.questions.filter(q => q.c === topic).length;
+        const btn = document.createElement('button');
+        btn.className = 'topic-card';
+        btn.innerHTML = `
+          <span>${activeData.emojis[topic] || '📚'} ${topic}</span>
+          <span class="topic-num">${count}Q</span>
+        `;
+        btn.onclick = () => startGame(topic);
+        grid.appendChild(btn);
+      });
+    }
+
+    // ============================================================
+    // GAME LOGIC
+    // ============================================================
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function startGame(mode) {
+      currentMode = mode;
+      score = 0;
+      lives = 3;
+      streak = 0;
+      maxStreak = 0;
+      currentIndex = 0;
+      isAnswered = false;
+
+      if (mode === 'all') {
+        currentQuestions = shuffle([...activeData.questions]);
+      } else {
+        currentQuestions = shuffle(activeData.questions.filter(q => q.c === mode));
+      }
+
+      if (!currentQuestions.length) return;
+
+      updateLivesDisplay();
+      updateStreak();
+      hideFeedback();
+      showScreen('quiz');
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      isAnswered = false;
+      hideFeedback();
+      clearTimer();
+
+      const q = currentQuestions[currentIndex];
+      const progress = (currentIndex / currentQuestions.length) * 100;
+
+      $('progress-bar').style.width = progress + '%';
+      $('q-counter').textContent = `${currentIndex + 1} / ${currentQuestions.length}`;
+      $('question-category').textContent = q.c;
+      $('question-text').textContent = q.q;
+
+      // Shuffle options
+      const opts = q.o.map((text, i) => ({ text, isCorrect: i === q.a }));
+      const shuffled = shuffle(opts);
+      const letters = ['A','B','C','D'];
+
+      const container = $('options-container');
+      container.innerHTML = '';
+      shuffled.forEach((opt, i) => {
+        const div = document.createElement('div');
+        div.className = 'option-card slide-up';
+        div.style.animationDelay = (i * 0.05) + 's';
+        div.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${opt.text}</span>`;
+        div.onclick = () => checkAnswer(opt.isCorrect, div, shuffled, container);
+        container.appendChild(div);
+      });
+
+      startTimer();
+    }
+
+    function checkAnswer(isCorrect, selectedDiv, shuffledOpts, container) {
+      if (isAnswered) return;
+      isAnswered = true;
+      clearTimer();
+
+      const q = currentQuestions[currentIndex];
+      const allCards = container.querySelectorAll('.option-card');
+
+      if (isCorrect) {
+        selectedDiv.classList.add('correct');
+        score++;
+        streak++;
+        if (streak > maxStreak) maxStreak = streak;
+        updateStreak();
+        showFeedback(true, q.e);
+      } else {
+        selectedDiv.classList.add('wrong');
+        selectedDiv.classList.add('shake');
+        streak = 0;
+        updateStreak();
+        lives--;
+        updateLivesDisplay(true);
+        // Highlight correct
+        allCards.forEach((card, i) => {
+          if (shuffledOpts[i].isCorrect) card.classList.add('correct');
+          else if (card !== selectedDiv) card.classList.add('disabled');
+        });
+        showFeedback(false, q.e);
+      }
+    }
+
+    function startTimer() {
+      timeLeft = TIMER_DURATION;
+      const bar = $('timer-bar');
+      bar.style.width = '100%';
+      bar.classList.remove('urgent');
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        const pct = (timeLeft / TIMER_DURATION) * 100;
+        bar.style.width = pct + '%';
+
+        if (timeLeft <= 8) bar.classList.add('urgent');
+
+        if (timeLeft <= 0) {
+          clearTimer();
+          timeExpired();
+        }
+      }, 1000);
+    }
+
+    function clearTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    function timeExpired() {
+      if (isAnswered) return;
+      isAnswered = true;
+      streak = 0;
+      updateStreak();
+      lives--;
+      updateLivesDisplay(true);
+
+      const q = currentQuestions[currentIndex];
+      const container = $('options-container');
+      const allCards = container.querySelectorAll('.option-card');
+      // We need to find which was correct - mark all, highlight correct
+      allCards.forEach(card => card.classList.add('disabled'));
+      // We can't easily recover shuffle, so just show message
+      showFeedback(false, '⏱ ¡Tiempo agotado! ' + q.e);
+    }
+
+    function updateLivesDisplay(animate = false) {
+      const hearts = $('lives-display').querySelectorAll('.heart');
+      hearts.forEach((h, i) => {
+        if (i >= lives) {
+          h.classList.add('lost');
+        } else {
+          h.classList.remove('lost');
+          if (animate && i === lives) {
+            h.style.animation = 'none';
+            setTimeout(() => { h.style.animation = 'heartBeat 0.5s ease'; }, 10);
+          }
+        }
+      });
+    }
+
+    function updateStreak() {
+      const badge = $('streak-badge');
+      $('streak-counter').textContent = streak;
+      if (streak >= 2) {
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    // ============================================================
+    // FEEDBACK
+    // ============================================================
+    function showFeedback(isCorrect, explanation) {
+      const area = $('feedback-area');
+      const nextBtn = $('next-btn');
+
+      if (isCorrect) {
+        area.style.background = 'rgba(0,230,118,0.06)';
+        area.style.borderTopColor = '#00e676';
+        $('feedback-icon').textContent = '✅';
+        $('feedback-title').style.color = 'var(--green)';
+        $('feedback-title').textContent = streak >= 3 ? `🔥 ¡Racha de ${streak}!` : '¡Correcto!';
+        nextBtn.className = 'next-correct';
+      } else {
+        area.style.background = 'rgba(255,23,68,0.06)';
+        area.style.borderTopColor = '#ff1744';
+        $('feedback-icon').textContent = lives <= 0 ? '💀' : '❌';
+        $('feedback-title').style.color = 'var(--red)';
+        $('feedback-title').textContent = lives <= 0 ? '¡Sin vidas!' : 'Incorrecto';
+        nextBtn.className = 'next-wrong';
+      }
+
+      $('feedback-text').textContent = explanation;
+      area.classList.add('show');
+
+      if (lives <= 0) {
+        nextBtn.textContent = 'Ver resultados';
+        nextBtn.onclick = () => gameOver();
+      } else {
+        nextBtn.textContent = 'Continuar →';
+        nextBtn.onclick = () => nextQuestion();
+      }
+    }
+
+    function hideFeedback() {
+      $('feedback-area').classList.remove('show');
+    }
+
+    function nextQuestion() {
+      currentIndex++;
+      if (currentIndex < currentQuestions.length) {
+        loadQuestion();
+      } else {
+        endGame();
+      }
+    }
+
+    // ============================================================
+    // GAME OVER
+    // ============================================================
+    function gameOver() {
+      clearTimer();
+      hideFeedback();
+      $('go-score').textContent = score;
+      $('go-total').textContent = currentIndex + 1;
+      $('go-retry-btn').onclick = () => startGame(currentMode);
+      showScreen('gameover');
+    }
+
+    // ============================================================
+    // END GAME
+    // ============================================================
+    function endGame() {
+      clearTimer();
+      hideFeedback();
+      $('progress-bar').style.width = '100%';
+
+      const total = currentQuestions.length;
+      const pct = Math.round((score / total) * 100);
+      let grade, trophy;
+
+      if (pct === 100) { grade = 'S'; trophy = '🏆'; }
+      else if (pct >= 90) { grade = 'A+'; trophy = '⭐'; }
+      else if (pct >= 80) { grade = 'A'; trophy = '🥇'; }
+      else if (pct >= 70) { grade = 'B'; trophy = '🥈'; }
+      else if (pct >= 60) { grade = 'C'; trophy = '🥉'; }
+      else { grade = 'D'; trophy = '📖'; }
+
+      const colors = { S:'#ffea00', 'A+':'#00e5ff', A:'var(--green)', B:'#7c3aed', C:'orange', D:'var(--muted)' };
+
+      $('result-trophy').textContent = trophy;
+      $('result-grade').textContent = grade;
+      $('result-grade').style.color = colors[grade] || 'var(--text)';
+      $('result-title').textContent = pct === 100 ? '¡Perfección absoluta!' : '¡Quiz completado!';
+      $('final-score').textContent = `${score}/${total}`;
+      $('final-percentage').textContent = `${pct}%`;
+      $('final-streak').textContent = maxStreak;
+      $('final-lives').textContent = '❤️'.repeat(lives) || '—';
+
+      const msgs = {
+        100: '¡Eres un genio de la Química! Rendimiento perfecto.',
+        90: '¡Excelente! Casi perfecto. Sigue así.',
+        80: '¡Muy bien! Dominas la materia.',
+        70: 'Buen nivel. Con un poco más de práctica llegarás lejos.',
+        60: 'Vas por buen camino. Sigue repasando.',
+        0: 'No te rindas. La química requiere práctica. ¡Inténtalo de nuevo!'
+      };
+      const msgKey = Object.keys(msgs).reverse().find(k => pct >= +k);
+      $('result-message').textContent = msgs[msgKey];
+
+      $('result-retry-btn').onclick = () => startGame(currentMode);
+
+      if (pct >= 90) launchConfetti();
+
+      showScreen('result');
+    }
+
+    // ============================================================
+    // RETURN TO MENU / SELECTION
+    // ============================================================
+    function returnToMenu() {
+      clearTimer();
+      hideFeedback();
+      $('progress-bar').style.width = '0%';
+      $('streak-badge').classList.add('hidden');
+      $('streak-counter').textContent = '0';
+      lives = 3;
+      updateLivesDisplay();
+      // Volver a la pantalla de START (donde se eligen temas de la rama actual)
+      showScreen('start');
+    }
+
+    // ============================================================
+    // CLOSE BTN
+    // ============================================================
+    $('close-btn').onclick = () => {
+      const quizActive = $('quiz-screen').classList.contains('active');
+      if (quizActive) {
+        if (confirm('¿Salir al menú? Se perderá el progreso.')) returnToMenu();
+      } else {
+        // Si no estamos en un quiz, el botón de cerrar nos lleva al Landing
+        showScreen('landing');
+      }
+    };
+
+    // ============================================================
+    // CONFETTI
+    // ============================================================
+    function launchConfetti() {
+      const colors = ['#00e5ff','#7c3aed','#00e676','#ffea00','#ff6d00','#ff1744'];
+      for (let i = 0; i < 80; i++) {
+        const el = document.createElement('div');
+        el.className = 'confetti-piece';
+        el.style.cssText = `
+          left: ${Math.random() * 100}vw;
+          top: -20px;
+          background: ${colors[Math.floor(Math.random() * colors.length)]};
+          width: ${6 + Math.random() * 8}px;
+          height: ${6 + Math.random() * 8}px;
+          border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+          animation-duration: ${1.5 + Math.random() * 2}s;
+          animation-delay: ${Math.random() * 0.8}s;
+          opacity: 1;
+        `;
+        document.body.appendChild(el);
+        el.addEventListener('animationend', () => el.remove());
+      }
+    }
+  </script>
+</body>
+</html>
