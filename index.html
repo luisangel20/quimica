@@ -143,7 +143,7 @@
     /* === LANDING SCREEN (NEW) === */
     #landing-screen {
       padding: 40px 20px;
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto;
       width: 100%;
       align-items: center;
@@ -161,7 +161,7 @@
     }
     .branch-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 20px;
       width: 100%;
     }
@@ -192,12 +192,14 @@
       border-radius: 50%;
       background: var(--surface2);
       margin-bottom: 8px;
+      transition: all 0.2s;
     }
     .branch-name { font-size: 20px; font-weight: 700; color: #fff; }
     .branch-desc { color: var(--muted); font-size: 14px; }
     
     .branch-card.inorg:hover .branch-icon { background: rgba(0,229,255,0.2); color: var(--accent); }
     .branch-card.org:hover .branch-icon { background: rgba(124,58,237,0.2); color: var(--accent2); }
+    .branch-card.electro:hover .branch-icon { background: rgba(255,234,0,0.2); color: var(--yellow); }
 
     /* === START SCREEN === */
     #start-screen {
@@ -695,6 +697,11 @@
           <div class="branch-name">Química Orgánica</div>
           <div class="branch-desc">Hidrocarburos, Grupos funcionales, Isomería, Reacciones...</div>
         </div>
+        <div class="branch-card electro" onclick="selectBranch('electro')">
+          <div class="branch-icon">⚡</div>
+          <div class="branch-name">Electroquímica</div>
+          <div class="branch-desc">Celdas Galvánicas, Electrólisis, Potenciales de Celda...</div>
+        </div>
       </div>
     </div>
 
@@ -851,7 +858,7 @@
       { c:"Reacciones Químicas", q:"¿Qué tipo de reacción es la siguiente? AB → A + B", o:["Síntesis","Análisis o descomposición","Sustitución","Redox"], a:1, e:"Es una reacción de Análisis o descomposición." },
       { c:"Reacciones Químicas", q:"¿Qué se produce en una reacción de neutralización?", o:["Una sal y agua","Un ácido y una base","Un óxido y oxígeno","Un metal y un no metal"], a:0, e:"Ácido + Base → Sal + Agua." },
       { c:"Reacciones Químicas", q:"¿Cuál es el número de oxidación del oxígeno en la mayoría de sus compuestos?", o:["+2","-1","-2","0"], a:2, e:"Generalmente actúa con -2." },
-      { c:"Reacciones y Mecanismos", q:"En una reacción redox, la especie que se reduce:", o:["Pierde electrones y aumenta oxidación","Gana electrones y disminuye oxidación","Gana electrones y aumenta oxidación","Pierde electrones y disminuye oxidación"], a:1, e:"Reducción = Ganancia de electrones y disminución del N.O." },
+      { c:"Reacciones Químicas", q:"En una reacción redox, la especie que se reduce:", o:["Pierde electrones y aumenta oxidación","Gana electrones y disminuye oxidación","Gana electrones y aumenta oxidación","Pierde electrones y disminuye oxidación"], a:1, e:"Reducción = Ganancia de electrones y disminución del N.O." },
       { c:"Reacciones Químicas", q:"¿Qué tipo de reacción ocurre cuando un elemento más reactivo desplaza a otro menos reactivo de un compuesto?", o:["Síntesis","Descomposición","Desplazamiento simple (sustitución)","Doble desplazamiento"], a:2, e:"Es desplazamiento simple o sustitución." },
       { c:"Reacciones Químicas", q:"Al quemar magnesio en aire, se produce una reacción de:", o:["Combustión (oxidación)","Neutralización","Desplazamiento","Descomposición"], a:0, e:"Es una combustión (oxidación rápida)." },
       { c:"Reacciones Químicas", q:"Para balancear una ecuación química se debe:", o:["Cambiar las fórmulas","Ajustar los coeficientes estequiométricos","Añadir más productos","Modificar los subíndices"], a:1, e:"Se ajustan los coeficientes estequiométricos." },
@@ -1101,6 +1108,81 @@
     };
 
     // ============================================================
+    // DATA: ELECTROQUÍMICA
+    // ============================================================
+    const electroQuestions = [
+    // ====================================
+    // 1. CONCEPTOS GENERALES (10 preguntas)
+    // ====================================
+    { c: "Conceptos Generales", q: "¿Cuál es la definición correcta de electroquímica?", o: ["Rama de la química que estudia la velocidad de las reacciones.", "Rama que estudia la transformación entre energía eléctrica y química.", "Estudio de los campos magnéticos en imanes.", "Estudio de los enlaces en moléculas orgánicas."], a: 1, e: "La electroquímica estudia la relación entre la energía eléctrica y la química." },
+    { c: "Conceptos Generales", q: "¿Qué tipo de procesos estudia la electroquímica?", o: ["Solo procesos de oxidación.", "Solo procesos de reducción.", "Procesos de óxido-reducción (redox) donde hay transferencia de electrones.", "Procesos nucleares."], a: 2, e: "La electroquímica se basa en reacciones redox, donde una especie se oxida y otra se reduce." },
+    { c: "Conceptos Generales", q: "¿Cómo se llama la rama de la electroquímica que genera electricidad mediante reacciones espontáneas?", o: ["Electrólisis", "Celdas electrolíticas", "Celdas galvánicas o voltaicas", "Termodinámica"], a: 2, e: "Las celdas galvánicas convierten energía química en eléctrica de forma espontánea." },
+    { c: "Conceptos Generales", q: "¿Qué nombre recibe el electrodo donde ocurre la oxidación?", o: ["Cátodo", "Ánodo", "Electrolito", "Puente salino"], a: 1, e: "En el ánodo siempre ocurre la oxidación (pérdida de electrones)." },
+    { c: "Conceptos Generales", q: "En una reacción redox, ¿qué significa que una especie se 'reduce'?", o: ["Gana electrones", "Pierde electrones", "Se descompone", "Precipita"], a: 0, e: "Reducción = ganancia de electrones (disminuye el número de oxidación)." },
+    { c: "Conceptos Generales", q: "¿Qué dispositivo se utiliza para medir el potencial de una celda electroquímica?", o: ["Amperímetro", "Voltímetro o potenciómetro", "Galvanómetro", "Ohmímetro"], a: 1, e: "El voltímetro mide la diferencia de potencial (voltaje) entre dos electrodos." },
+    { c: "Conceptos Generales", q: "¿Qué condiciones se consideran 'estándar' (E°) en electroquímica?", o: ["1 atm, 25°C y concentración 1M", "0°C y 1 atm", "25°C y cualquier concentración", "Temperatura ambiente sin presión definida"], a: 0, e: "Las condiciones estándar son 298K (25°C), 1 atm de presión y concentraciones 1 M." },
+    { c: "Conceptos Generales", q: "¿Qué representa la 'fem' de una celda?", o: ["La masa de los electrodos", "La fuerza electromotriz o diferencia de potencial", "La cantidad de corriente", "La resistencia interna"], a: 1, e: "La FEM es el voltaje máximo que puede producir una celda." },
+    { c: "Conceptos Generales", q: "¿Cuál de los siguientes NO es un ejemplo de aplicación electroquímica?", o: ["Baterías de automóvil", "Cromado de metales", "Refinación del cobre", "Destilación del petróleo"], a: 3, e: "La destilación es un proceso físico de separación, no electroquímico." },
+    { c: "Conceptos Generales", q: "¿Quién inventó la primera pila eléctrica (la pila voltaica)?", o: ["Michael Faraday", "Alessandro Volta", "Daniell", "Galvani"], a: 1, e: "Alessandro Volta inventó la pila voltaica en 1800." },
+
+    // ====================================
+    // 2. CELDAS GALVÁNICAS (10 preguntas)
+    // ====================================
+    { c: "Celdas Galvánicas", q: "En una celda galvánica (o voltaica), la reacción química que ocurre es:", o: ["No espontánea y consume electricidad.", "Siempre una reacción de descomposición.", "Espontánea y produce una corriente eléctrica.", "Independiente de los potenciales de los electrodos."], a: 2, e: "Las celdas galvánicas aprovechan reacciones espontáneas para generar electricidad." },
+    { c: "Celdas Galvánicas", q: "En la pila de Daniell (Zn/Cu), ¿qué ocurre en el electrodo de zinc?", o: ["Los iones de zinc ganan electrones (reducción).", "El zinc metálico pierde electrones (oxidación).", "Los electrones fluyen desde el cobre hacia el zinc.", "No ocurre ninguna reacción."], a: 1, e: "El zinc actúa como ánodo, por lo que se oxida." },
+    { c: "Celdas Galvánicas", q: "¿Qué indica un potencial de celda (E°celda) positivo en una pila?", o: ["Reacción no espontánea.", "Reacción espontánea capaz de generar electricidad.", "No hay transferencia de electrones.", "El cátodo es donde ocurre la oxidación."], a: 1, e: "Un E°celda positivo significa que la reacción neta es espontánea." },
+    { c: "Celdas Galvánicas", q: "En una celda galvánica, ¿hacia dónde fluyen los electrones por el circuito externo?", o: ["Del cátodo al ánodo", "Del ánodo al cátodo", "A través del electrolito", "No fluyen electrones, solo iones"], a: 1, e: "Los electrones fluyen del ánodo (oxidación) al cátodo (reducción)." },
+    { c: "Celdas Galvánicas", q: "¿Cuál es la función del puente salino en una celda galvánica?", o: ["Conducir electrones", "Mantener la neutralidad eléctrica en las soluciones", "Aislar los electrodos", "Aumentar la temperatura"], a: 1, e: "El puente salino permite el flujo de iones para evitar la acumulación de carga." },
+    { c: "Celdas Galvánicas", q: "¿Qué electrodo tiene el potencial de reducción más alto en una pila?", o: ["El ánodo (donde se oxida)", "El cátodo (donde se reduce)", "El electrodo inerte", "El puente salino"], a: 1, e: "El cátodo tiene el mayor potencial de reducción (es el que se reduce)." },
+    { c: "Celdas Galvánicas", q: "¿Cómo se representa una celda galvánica en notación química?", o: ["Ánodo | Electrolito || Cátodo | Electrolito", "Cátodo | Ánodo", "Electrolito | Ánodo || Cátodo", "Ánodo || Cátodo"], a: 0, e: "La notación estándar es: Ánodo (oxidación) || Cátodo (reducción)." },
+    { c: "Celdas Galvánicas", q: "¿Qué tipo de energía se produce en una celda galvánica?", o: ["Energía térmica", "Energía nuclear", "Energía eléctrica a partir de energía química", "Energía mecánica"], a: 2, e: "Convierte energía química en energía eléctrica." },
+    { c: "Celdas Galvánicas", q: "¿Qué ocurre en el cátodo de una pila?", o: ["Oxidación del metal", "Reducción de los iones", "Paso de electrones hacia el ánodo", "Disolución del electrodo"], a: 1, e: "En el cátodo ocurre la reducción (los iones ganan electrones)." },
+    { c: "Celdas Galvánicas", q: "¿Qué sucede si no hay puente salino en una pila?", o: ["La pila funciona mejor", "La corriente deja de fluir por acumulación de carga", "Los electrones fluyen al revés", "No pasa nada"], a: 1, e: "Sin puente salino, las soluciones se cargan y la reacción se detiene." },
+
+    // ====================================
+    // 3. CELDAS ELECTROLÍTICAS (10 preguntas)
+    // ====================================
+    { c: "Celdas Electrolíticas", q: "En una celda electrolítica, la fuente de poder externa está conectada de tal manera que:", o: ["Ánodo negativo y cátodo positivo (reacción no espontánea).", "Ánodo positivo y cátodo negativo (igual que en una pila).", "Ambos electrodos tienen la misma carga.", "No hay flujo de electrones."], a: 0, e: "La fuente fuerza la reacción no espontánea." },
+    { c: "Celdas Electrolíticas", q: "El proceso de recubrir un metal con una capa de otro metal mediante electricidad se llama:", o: ["Electrólisis del agua.", "Corrosión.", "Galvanoplastia (electrodeposición).", "Puente salino."], a: 2, e: "La galvanoplastia deposita una capa de metal sobre otro." },
+    { c: "Celdas Electrolíticas", q: "Si se desea platear una cuchara de hierro con plata, ¿qué material debe usarse como ánodo?", o: ["La cuchara de hierro.", "Un trozo de plata metálica.", "Un trozo de cobre.", "Un material inerte."], a: 1, e: "El ánodo de plata se oxida y libera iones Ag+ a la solución." },
+    { c: "Celdas Electrolíticas", q: "En la electrólisis del agua, ¿qué gases se producen?", o: ["Oxígeno (O2) e Hidrógeno (H2)", "Cloro (Cl2) y Oxígeno", "Solo Hidrógeno", "Solo Oxígeno"], a: 0, e: "El agua se descompone en H2 (cátodo) y O2 (ánodo)." },
+    { c: "Celdas Electrolíticas", q: "¿Qué tipo de corriente se utiliza generalmente en una celda electrolítica?", o: ["Corriente alterna (AC)", "Corriente continua (DC)", "Campos magnéticos", "No necesita corriente"], a: 1, e: "Se necesita corriente continua (DC) para forzar las reacciones en una dirección." },
+    { c: "Celdas Electrolíticas", q: "En el cromado de un parachoques (hierro), ¿qué función cumple el parachoques?", o: ["Ánodo (se oxida)", "Cátodo (se reduce el metal a depositar)", "Electrolito", "Puente salino"], a: 1, e: "El objeto a recubrir actúa como cátodo." },
+    { c: "Celdas Electrolíticas", q: "¿Cuál es una aplicación industrial importante de las celdas electrolíticas?", o: ["Pilas alcalinas", "Baterías de litio", "Obtención de aluminio (proceso Hall-Héroult)", "Celdas solares"], a: 2, e: "El aluminio se obtiene por electrólisis de la alúmina." },
+    { c: "Celdas Electrolíticas", q: "¿Qué ocurre con la energía en una celda electrolítica?", o: ["Se genera electricidad espontáneamente", "Se consume energía eléctrica para producir una reacción química", "Se genera calor sin reacción", "Se crea energía de la nada"], a: 1, e: "Consume electricidad para forzar una reacción química no espontánea." },
+    { c: "Celdas Electrolíticas", q: "En la refinación electrolítica del cobre, ¿qué material se usa como ánodo?", o: ["Cobre puro", "Cobre impuro (a refinar)", "Un metal inerte como platino", "Grafito"], a: 1, e: "El ánodo es el cobre impuro que se va a disolver y purificar." },
+    { c: "Celdas Electrolíticas", q: "¿Cómo se llama el proceso inverso a una celda galvánica?", o: ["Corrosión", "Electrólisis", "Pasivación", "Fotosíntesis"], a: 1, e: "La electrólisis usa electricidad para producir una reacción química (lo contrario de una pila)." },
+
+    // ====================================
+    // 4. COMPONENTES DE CELDA (10 preguntas)
+    // ====================================
+    { c: "Componentes de Celda", q: "¿Qué función cumple el electrolito en una celda electroquímica?", o: ["Conducir electrones por el circuito externo.", "Permitir la conducción de iones entre los electrodos.", "Actuar como un aislante.", "Ser el metal que se oxida."], a: 1, e: "El electrolito permite el flujo de iones dentro de la celda." },
+    { c: "Componentes de Celda", q: "¿Cuál de las siguientes afirmaciones sobre el puente salino es falsa?", o: ["Permite el flujo de iones.", "Contiene una sal inerte.", "Es el cable por donde viajan los electrones.", "Evita que las soluciones se mezclen."], a: 2, e: "Los electrones viajan por el circuito externo, no por el puente salino." },
+    { c: "Componentes de Celda", q: "¿Qué es un electrodo inerte?", o: ["Un electrodo que se oxida fácilmente", "Un electrodo que participa en la reacción", "Un electrodo que no participa químicamente (solo conduce electrones)", "Un electrodo de zinc"], a: 2, e: "Ejemplos de inertes: Platino (Pt) y Grafito (C)." },
+    { c: "Componentes de Celda", q: "¿Qué contiene típicamente un puente salino?", o: ["Agua destilada", "Aceite", "Una sal (como KCl) en agar-agar o gel", "Mercurio"], a: 2, e: "Contiene una sal inerte disuelta en un gel que permite el paso de iones." },
+    { c: "Componentes de Celda", q: "¿Cuál de estos es un buen electrolito?", o: ["Cobre sólido", "Agua destilada", "Aceite", "Solución de NaCl (sal en agua)"], a: 3, e: "Una solución de sal disuelta en agua conduce iones." },
+    { c: "Componentes de Celda", q: "¿Qué tipo de corriente transportan los iones en el electrolito?", o: ["Corriente electrónica", "Corriente iónica", "Corriente alterna", "No transportan corriente"], a: 1, e: "Los iones transportan carga mediante su movimiento (corriente iónica)." },
+    { c: "Componentes de Celda", q: "¿Por qué a veces se usa un electrodo de platino en una celda?", o: ["Porque es barato", "Porque es inerte (no se oxida ni reduce fácilmente)", "Porque es magnético", "Porque se disuelve rápido"], a: 1, e: "El platino es noble y no participa en la reacción, solo conduce." },
+    { c: "Componentes de Celda", q: "¿Cuál es la diferencia principal entre un conductor metálico y un electrolito?", o: ["El metal conduce electrones; el electrolito conduce iones.", "Ambos conducen electrones.", "El electrolito es siempre sólido.", "El metal conduce iones."], a: 0, e: "Los metales conducen por electrones; las soluciones conducen por iones." },
+    { c: "Componentes de Celda", q: "¿Qué iones suele contener un puente salino de KCl?", o: ["K+ y Cl-", "H+ y OH-", "Na+ y Cl-", "Cu2+ y SO4-"], a: 0, e: "El KCl es común porque los iones K+ y Cl- tienen movilidades similares." },
+    { c: "Componentes de Celda", q: "¿Qué pasaría si usáramos agua pura (destilada) como electrolito?", o: ["Conduciría muy bien la electricidad", "Casi no conduciría electricidad", "La celda generaría más voltaje", "Los electrones fluirían mejor"], a: 1, e: "El agua pura tiene muy pocos iones, por lo que es mala conductora." }
+];
+    const electroCategories = [
+      "Conceptos Generales",
+      "Celdas Galvánicas",
+      "Celdas Electrolíticas",
+      "Componentes de Celda"
+    ];
+
+    const electroEmojis = {
+      "Conceptos Generales": "📚",
+      "Celdas Galvánicas": "🔋",
+      "Celdas Electrolíticas": "⚡",
+      "Componentes de Celda": "🧪"
+    };
+
+
+    // ============================================================
     // STATE
     // ============================================================
     let activeData = {
@@ -1154,7 +1236,7 @@
           "🧪", 
           `90 preguntas · 9 temas · 3 vidas · 30s por pregunta`
         );
-      } else {
+      } else if (type === 'organic') {
         activeData.questions = [...organicQuestions];
         activeData.categories = [...organicCategories];
         activeData.emojis = {...organicEmojis};
@@ -1162,6 +1244,15 @@
           "Química Orgánica", 
           "⚗️", 
           `160 preguntas · 16 temas · 3 vidas · 30s por pregunta`
+        );
+      } else if (type === 'electro') {
+        activeData.questions = [...electroQuestions];
+        activeData.categories = [...electroCategories];
+        activeData.emojis = {...electroEmojis};
+        updateStartScreen(
+          "Electroquímica", 
+          "⚡", 
+          `10 preguntas · 4 temas · 3 vidas · 30s por pregunta`
         );
       }
       renderTopics();
@@ -1490,7 +1581,7 @@
     $('close-btn').onclick = () => {
       const quizActive = $('quiz-screen').classList.contains('active');
       if (quizActive) {
-        if (confirm('¿Salir al menú? Se perderá el progreso.')) returnToMenu();
+        if (confirm('¿Salir al menú principal? Se perderá el progreso.')) returnToMenu();
       } else {
         // Si no estamos en un quiz, el botón de cerrar nos lleva al Landing
         showScreen('landing');
